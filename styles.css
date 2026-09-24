@@ -338,7 +338,8 @@ body.ready .hero__title .line:nth-child(4) .word { transition-delay: 0.3s; }
 }
 /* ---------- 3D labels (motion graphics) ---------- */
 .annos { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
-.anno { position: absolute; left: 0; top: 0; transition: opacity 0.4s; will-change: transform; }
+.anno { position: absolute; left: 0; top: 0; will-change: transform; }
+.anno:not(.show) { visibility: hidden; transition: visibility 0s 0.8s; }
 .anno__dot {
   position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%;
   border: 1px solid var(--accent); transform: scale(0); transition: transform 0.6s var(--ease) var(--d);
@@ -361,9 +362,9 @@ body.ready .hero__title .line:nth-child(4) .word { transition-delay: 0.3s; }
 }
 .anno__label b { color: var(--accent); font-weight: 500; margin-right: 0.55em; }
 .anno__label small { display: block; margin-top: 0.15rem; font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-.annos.on .anno__dot { transform: scale(1); }
-.annos.on .anno__line { transform: rotate(-40deg) scaleX(1); }
-.annos.on .anno__label { clip-path: inset(0 0 0 0); }
+.anno.show .anno__dot { transform: scale(1); }
+.anno.show .anno__line { transform: rotate(-40deg) scaleX(1); }
+.anno.show .anno__label { clip-path: inset(0 0 0 0); }
 @keyframes annoPulse { 0% { transform: scale(0.4); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
 
 .roomtitle {

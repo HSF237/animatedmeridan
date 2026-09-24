@@ -1,349 +1,208 @@
 import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { buildVilla } from "./villa.js?v=7";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isMobile = window.matchMedia("(max-width: 760px)").matches;
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const smooth = (t) => t * t * (3 - 2 * t);
-const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 document.body.classList.add("loading");
 document.getElementById("year").textContent = new Date().getFullYear();
 
 /* =========================================================
-   REAL-3D VILLA
-   Every room photo is rebuilt as 3D geometry from a depth map
-   (Depth Anything V2): each pixel is pushed out to its distance, so the
-   camera genuinely moves through the space. You walk forward through a
-   room, then turn 90° in 3D — the room you leave bursts into gold
-   particles and the next one assembles from them, solidifying behind a
-   gold scan line. Labels draw themselves onto the 3D scene.
+   RENDERER — golden hour on the coast
    ========================================================= */
-const HFOV = THREE.MathUtils.degToRad(64); // assumed horizontal field of view of the photos
-const IMG_ASPECT = 1672 / 941;
-
-// anchors: [u, v from top, label, detail]
-const ROOMS = [
-  {
-    key: "arrival", room: "Arrival", t: 0, turn: -1, near: 3, far: 70, walk: 6,
-    anchors: [[0.42, 0.58, "Grand entrance stair", "Floating travertine treads"], [0.66, 0.4, "Cantilevered terrace", "Frameless glass balustrade"], [0.86, 0.66, "Infinity pool", "Overflow edge to the bay"]],
-  },
-  {
-    key: "terrace", room: "Infinity Terrace", t: 1.0, turn: 1, near: 2.2, far: 60, walk: 4,
-    anchors: [[0.84, 0.84, "Infinity edge", "Cascading water wall"], [0.28, 0.62, "Travertine sun deck", "Daybeds in Belgian linen"], [0.55, 0.28, "Master terrace", "Glass & bronze"]],
-  },
-  {
-    key: "living", room: "Grand Living", t: 2.05, turn: 1, near: 2, far: 30, walk: 2.2,
-    anchors: [[0.48, 0.12, "Crystal cascade chandelier", "Hand-blown glass rods"], [0.42, 0.42, "7.2 m glazing", "Double-height sea view"], [0.9, 0.68, "Linear fireplace", "Book-matched marble"], [0.28, 0.66, "Bouclé lounge", "Bespoke modular sofa"]],
-  },
-  {
-    key: "kitchen", room: "Kitchen", t: 3.15, turn: -1, near: 2, far: 26, walk: 2,
-    anchors: [[0.38, 0.68, "Quartzite waterfall island", "Single-slab, 4.8 m"], [0.52, 0.2, "Blown-glass pendants", "Brass & amber"], [0.16, 0.2, "Walnut millwork", "Floor-to-ceiling"], [0.03, 0.45, "Wine wall", "Climate-controlled"]],
-  },
-  {
-    key: "suite", room: "Master Suite", t: 4.25, turn: -1, near: 1.8, far: 28, walk: 2,
-    anchors: [[0.14, 0.26, "Hand-split stone wall", "Backlit relief"], [0.72, 0.34, "Panoramic sliders", "Opens to the terrace"], [0.34, 0.6, "Bespoke bed", "Silk & bouclé"]],
-  },
-  {
-    key: "terrace", room: "Sunset Terrace", t: 5.4, turn: 0, near: 2.2, far: 60, walk: 1.6,
-    anchors: [[0.95, 0.47, "Golden hour", "Due west over the bay"], [0.58, 0.58, "Outdoor lounge", "Fire table & loggia"]],
-  },
-];
-const END_T = 7;
-const HOLD = 0.58; // part of each segment spent walking through a room
-
 const canvas = document.getElementById("scene");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 1.75));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.setClearColor(0x0b0c0f, 1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.92;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false; // the villa is static: render the sun's shadows once
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x0b0c0f, 60, 140);
-const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.05, 400);
+const SUN = new THREE.Vector3(0.35, 0.055, -1).normalize();
 
-/* ---------- Assets ---------- */
-const keys = [...new Set(ROOMS.map((r) => r.key))];
-const uniqueSrcs = keys.flatMap((k) => [`assets/villa/${k}.webp`, `assets/villa/${k}-depth.png`]);
-let loadedCount = 0;
-const tex = {};
-const depthPixels = {};
-const texLoader = new THREE.TextureLoader();
-function loadTex(src, isDepth) {
-  return new Promise((resolve) => {
-    texLoader.load(src, (t) => {
-      t.colorSpace = isDepth ? THREE.NoColorSpace : THREE.SRGBColorSpace;
-      t.generateMipmaps = true;
-      t.minFilter = THREE.LinearMipmapLinearFilter;
-      t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      if (isDepth) {
-        // keep CPU-side depth for placing labels and camera paths
-        const c = document.createElement("canvas");
-        c.width = t.image.width;
-        c.height = t.image.height;
-        const ctx = c.getContext("2d");
-        ctx.drawImage(t.image, 0, 0);
-        depthPixels[src] = { w: c.width, h: c.height, data: ctx.getImageData(0, 0, c.width, c.height).data };
+// Sky: gradient, sun disc & glow, drifting sunset clouds
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  depthWrite: false,
+  fog: false,
+  uniforms: { sun: { value: SUN }, time: { value: 0 } },
+  vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+  fragmentShader: `
+    varying vec3 vDir; uniform vec3 sun; uniform float time;
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+    float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+      return mix(mix(hash(i),hash(i+vec2(1,0)),f.x), mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x), f.y); }
+    float fbm(vec2 p){ float v=0.0, a=0.5; for(int i=0;i<5;i++){ v+=a*noise(p); p*=2.03; a*=0.5; } return v; }
+    void main(){
+      vec3 d = normalize(vDir);
+      float h = d.y;
+      float sd = max(dot(d, sun), 0.0);
+      vec3 zenith = vec3(0.2, 0.27, 0.52);
+      vec3 mid = vec3(0.66, 0.5, 0.62);
+      vec3 horizon = mix(vec3(0.98, 0.6, 0.45), vec3(1.0, 0.5, 0.18), pow(sd, 2.0));
+      vec3 col = mix(horizon, mid, smoothstep(0.0, 0.18, h));
+      col = mix(col, zenith, smoothstep(0.15, 0.7, h));
+      col += vec3(1.0, 0.5, 0.2) * pow(sd, 8.0) * 0.35;
+      col += vec3(1.0, 0.72, 0.4) * pow(sd, 90.0) * 0.5;
+      // clouds: a band of broken altocumulus lit from the sun side
+      if (h > 0.0) {
+        vec2 uv = d.xz / (h + 0.08) * 1.4 + vec2(time * 0.004, 0.0);
+        float c = fbm(uv * 1.3);
+        float band = smoothstep(0.02, 0.1, h) * (1.0 - smoothstep(0.35, 0.6, h));
+        float cov = smoothstep(0.52, 0.72, c) * band;
+        vec3 lit = mix(vec3(0.78, 0.46, 0.5), vec3(1.0, 0.56, 0.3), pow(sd, 1.5));
+        vec3 edge = vec3(1.0, 0.75, 0.45) * pow(sd, 4.0);
+        col = mix(col, lit + edge * 0.6, cov * 0.85);
       }
-      tex[src] = t;
-      loadedCount++;
-      resolve();
-    }, undefined, () => { loadedCount++; resolve(); });
-  });
-}
-const assetsReady = Promise.all(keys.flatMap((k) => [loadTex(`assets/villa/${k}.webp`, false), loadTex(`assets/villa/${k}-depth.png`, true)]));
-
-/* ---------- Shaders ---------- */
-const common = /* glsl */ `
-  uniform sampler2D colorMap, depthMap;
-  uniform float tanH, imgAspect, invNear, invFar;
-  vec3 unproject(vec2 uv, float d) {
-    float z = 1.0 / mix(invFar, invNear, d);
-    return vec3((uv.x - 0.5) * 2.0 * tanH * z, (uv.y - 0.5) * 2.0 * tanH / imgAspect * z, -z);
-  }
-`;
-
-const meshVert = /* glsl */ `
-  ${common}
-  uniform float lod, backOffset;
-  varying vec2 vUv;
-  varying float vDisp, vStretch;
-  void main() {
-    vUv = uv;
-    float d = textureLod(depthMap, uv, lod).r;
-    float e = 1.5 / 1024.0;
-    float dx = abs(textureLod(depthMap, uv + vec2(e, 0.0), lod).r - textureLod(depthMap, uv - vec2(e, 0.0), lod).r);
-    float dy = abs(textureLod(depthMap, uv + vec2(0.0, e * 1.78), lod).r - textureLod(depthMap, uv - vec2(0.0, e * 1.78), lod).r);
-    vStretch = max(dx, dy);
-    vDisp = d;
-    vec3 p = unproject(uv, d) * (1.0 + backOffset);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-  }
-`;
-const meshFrag = /* glsl */ `
-  uniform sampler2D colorMap;
-  uniform float solid, stretchCut;
-  varying vec2 vUv;
-  varying float vDisp, vStretch;
-  void main() {
-    if (vStretch > stretchCut) discard;
-    // materialise from far to near behind a gold scan front
-    float front = solid * 1.25 - 0.1;
-    if (vDisp > front) discard;
-    vec3 col = texture2D(colorMap, vUv).rgb;
-    float band = smoothstep(front - 0.07, front, vDisp) * step(solid, 0.999);
-    col = mix(col, vec3(1.0, 0.78, 0.45) * 1.6, band * 0.85);
-    gl_FragColor = vec4(col, 1.0);
-    #include <colorspace_fragment>
-  }
-`;
-
-const pointsVert = /* glsl */ `
-  ${common}
-  attribute vec3 rdir;
-  attribute float rnd;
-  uniform float scatter, time, pxScale, gather;
-  varying vec3 vColor;
-  varying float vGlow, vAlpha;
-  void main() {
-    float d = textureLod(depthMap, uv, 1.0).r;
-    vec3 p = unproject(uv, d);
-    float s = scatter;
-    float z = -p.z;
-    // burst outwards, drift up, swirl around the room's axis
-    vec3 off = rdir * (0.6 + rnd * 2.4) * z * 0.18 * s + vec3(0.0, s * s * (1.0 + rnd * 4.0), 0.0);
-    p += off;
-    float a = s * (0.6 + rnd) * 1.4 * (rnd > 0.5 ? 1.0 : -1.0);
-    float ca = cos(a), sa = sin(a);
-    p.xz = mat2(ca, -sa, sa, ca) * p.xz;
-    p += vec3(sin(time * 0.7 + rnd * 20.0), cos(time * 0.5 + rnd * 13.0), sin(time * 0.6 + rnd * 7.0)) * 0.08 * s * z * 0.1;
-    vColor = texture2D(colorMap, uv).rgb;
-    vGlow = clamp(s * 1.4, 0.0, 1.0);
-    vAlpha = (1.0 - smoothstep(0.75, 1.0, s)) * gather;
-    vec4 mv = modelViewMatrix * vec4(p, 1.0);
-    gl_Position = projectionMatrix * mv;
-    gl_PointSize = pxScale * (1.0 + s * (1.0 + rnd * 2.0));
-  }
-`;
-const pointsFrag = /* glsl */ `
-  varying vec3 vColor;
-  varying float vGlow, vAlpha;
-  void main() {
-    vec2 c = gl_PointCoord - 0.5;
-    float r = length(c);
-    if (r > 0.5) discard;
-    vec3 gold = vec3(1.0, 0.76, 0.42);
-    vec3 col = mix(vColor, gold * 1.3, vGlow * 0.75);
-    float soft = mix(1.0, smoothstep(0.5, 0.0, r), vGlow);
-    gl_FragColor = vec4(col, vAlpha * soft);
-    #include <colorspace_fragment>
-  }
-`;
-
-/* ---------- Build rooms ---------- */
-const SEG_X = isMobile ? 220 : 320;
-const SEG_Y = Math.round(SEG_X / IMG_ASPECT);
-const meshGeo = new THREE.PlaneGeometry(1, 1, SEG_X, SEG_Y);
-const backGeo = new THREE.PlaneGeometry(1, 1, 96, 54);
-const PX = isMobile ? 150 : 220;
-const PY = Math.round(PX / IMG_ASPECT);
-const pointsGeo = (() => {
-  const n = PX * PY;
-  const uv = new Float32Array(n * 2);
-  const rdir = new Float32Array(n * 3);
-  const rnd = new Float32Array(n);
-  const pos = new Float32Array(n * 3);
-  let i = 0;
-  for (let y = 0; y < PY; y++) {
-    for (let x = 0; x < PX; x++, i++) {
-      uv[i * 2] = (x + Math.random()) / PX;
-      uv[i * 2 + 1] = (y + Math.random()) / PY;
-      const th = Math.random() * Math.PI * 2, ph = Math.acos(Math.random() * 2 - 1);
-      rdir.set([Math.sin(ph) * Math.cos(th), Math.cos(ph) * 0.6, Math.sin(ph) * Math.sin(th)], i * 3);
-      rnd[i] = Math.random();
-    }
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  g.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
-  g.setAttribute("rdir", new THREE.BufferAttribute(rdir, 3));
-  g.setAttribute("rnd", new THREE.BufferAttribute(rnd, 1));
-  return g;
-})();
-
-const rooms = ROOMS.map((cfg) => {
-  const group = new THREE.Group();
-  scene.add(group);
-  const base = {
-    colorMap: { value: null },
-    depthMap: { value: null },
-    tanH: { value: Math.tan(HFOV / 2) },
-    imgAspect: { value: IMG_ASPECT },
-    invNear: { value: 1 / cfg.near },
-    invFar: { value: 1 / cfg.far },
-  };
-  const mk = (lod, backOffset, stretchCut) =>
-    new THREE.ShaderMaterial({
-      uniforms: { ...base, lod: { value: lod }, backOffset: { value: backOffset }, solid: { value: 0 }, stretchCut: { value: stretchCut } },
-      vertexShader: meshVert,
-      fragmentShader: meshFrag,
-      side: THREE.DoubleSide,
-    });
-  const front = new THREE.Mesh(meshGeo, mk(0, 0, 0.05));
-  const back = new THREE.Mesh(backGeo, mk(4, 0.04, 10));
-  front.frustumCulled = back.frustumCulled = false;
-  group.add(back, front);
-  const pmat = new THREE.ShaderMaterial({
-    uniforms: { ...base, scatter: { value: 1 }, time: { value: 0 }, pxScale: { value: 3 }, gather: { value: 0 } },
-    vertexShader: pointsVert,
-    fragmentShader: pointsFrag,
-    transparent: true,
-    depthWrite: false,
-  });
-  const points = new THREE.Points(pointsGeo, pmat);
-  points.frustumCulled = false;
-  group.add(points);
-  group.visible = false;
-  return { cfg, group, front, back, points, base, anchors3D: [] };
+      // sun disc
+      col += vec3(1.0, 0.85, 0.6) * smoothstep(0.9993, 0.9997, sd) * 4.0;
+      col = mix(col, vec3(0.55, 0.4, 0.42), smoothstep(0.0, -0.05, h));
+      gl_FragColor = vec4(col, 1.0);
+    }`,
 });
+const sky = new THREE.Mesh(new THREE.SphereGeometry(4000, 64, 32), skyMat);
+scene.add(sky);
 
-/* ---------- Floating dust in the light ---------- */
-const dust = (() => {
-  const n = isMobile ? 500 : 1100;
-  const p = new Float32Array(n * 3);
-  const r = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    p.set([(Math.random() - 0.5) * 14, (Math.random() - 0.5) * 7, -Math.random() * 16 - 1], i * 3);
-    r[i] = Math.random();
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.BufferAttribute(p, 3));
-  g.setAttribute("rnd", new THREE.BufferAttribute(r, 1));
-  const m = new THREE.ShaderMaterial({
-    uniforms: { time: { value: 0 }, px: { value: renderer.getPixelRatio() } },
-    vertexShader: `attribute float rnd; uniform float time, px; varying float vA;
-      void main(){ vec3 q = position; q.y += mod(time * (0.05 + rnd * 0.12) + rnd * 7.0, 7.0) - 3.5; q.x += sin(time * 0.3 + rnd * 30.0) * 0.4;
-        vec4 mv = modelViewMatrix * vec4(q, 1.0); gl_Position = projectionMatrix * mv;
-        gl_PointSize = (1.5 + rnd * 3.0) * px * (6.0 / -mv.z); vA = (0.25 + 0.5 * rnd) * (0.6 + 0.4 * sin(time * 2.0 + rnd * 40.0)); }`,
-    fragmentShader: `varying float vA; void main(){ float r = length(gl_PointCoord - 0.5); if (r > 0.5) discard; gl_FragColor = vec4(1.0, 0.82, 0.55, vA * smoothstep(0.5, 0.0, r)); }`,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-  });
-  const pts = new THREE.Points(g, m);
-  pts.frustumCulled = false;
-  camera.add(pts);
-  scene.add(camera);
-  return m;
-})();
+// Sea with a glittering sun path
+const seaMat = new THREE.ShaderMaterial({
+  fog: false,
+  uniforms: { sun: { value: SUN }, time: { value: 0 }, camPos: { value: new THREE.Vector3() } },
+  vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+  fragmentShader: `
+    varying vec3 vW; uniform vec3 sun, camPos; uniform float time;
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
+    float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+      return mix(mix(hash(i),hash(i+vec2(1,0)),f.x), mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x), f.y); }
+    void main(){
+      vec3 v = normalize(vW - camPos);
+      float dist = length(vW - camPos);
+      vec2 p = vW.xz * 0.05;
+      float n = noise(p + time * 0.15) * 0.6 + noise(p * 3.1 - time * 0.2) * 0.4;
+      vec3 nrm = normalize(vec3((n - 0.5) * 0.18, 1.0, (noise(p.yx * 2.0 + time * 0.1) - 0.5) * 0.18));
+      vec3 r = reflect(v, nrm);
+      float sd = max(dot(r, sun), 0.0);
+      float fres = pow(1.0 - max(dot(-v, vec3(0,1,0)), 0.0), 4.0);
+      vec3 deep = vec3(0.1, 0.13, 0.24);
+      vec3 skyRef = mix(vec3(0.5, 0.45, 0.62), vec3(1.0, 0.6, 0.35), pow(max(dot(normalize(vec3(r.x, 0.0, r.z)), normalize(vec3(sun.x, 0.0, sun.z))), 0.0), 4.0));
+      vec3 col = mix(deep, skyRef, 0.25 + fres * 0.6);
+      col += vec3(1.0, 0.72, 0.42) * pow(sd, 90.0) * 3.0;
+      col += vec3(1.0, 0.8, 0.5) * step(0.9985, sd) * 4.0 * noise(vW.xz * 0.8 + time);
+      // haze towards the horizon
+      float haze = smoothstep(300.0, 3500.0, dist);
+      col = mix(col, vec3(0.98, 0.6, 0.45), haze * 0.85);
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+});
+const sea = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), seaMat);
+sea.rotation.x = -Math.PI / 2;
+sea.position.set(0, -60, -2000);
+scene.add(sea);
 
-/* ---------- Room layout in world space ---------- */
-// Each room's camera origin sits where the previous walk ended, turned 90° left or right.
-const tmpV = new THREE.Vector3();
-const up = new THREE.Vector3(0, 1, 0);
-function sampleDepth(key, u, vTop) {
-  const dp = depthPixels[`assets/villa/${key}-depth.png`];
-  if (!dp) return 0.5;
-  const x = Math.min(dp.w - 1, Math.max(0, Math.round(u * (dp.w - 1))));
-  const y = Math.min(dp.h - 1, Math.max(0, Math.round(vTop * (dp.h - 1))));
-  return dp.data[(y * dp.w + x) * 4] / 255;
-}
-function unprojectCPU(cfg, u, vTop, d) {
-  const z = 1 / lerp(1 / cfg.far, 1 / cfg.near, d);
-  const t = Math.tan(HFOV / 2);
-  return new THREE.Vector3((u - 0.5) * 2 * t * z, (0.5 - vTop) * 2 * (t / IMG_ASPECT) * z, -z);
-}
-function layoutRooms() {
-  let origin = new THREE.Vector3();
-  let yaw = 0;
-  for (const r of rooms) {
-    const cfg = r.cfg;
-    r.base.colorMap.value = tex[`assets/villa/${cfg.key}.webp`];
-    r.base.depthMap.value = tex[`assets/villa/${cfg.key}-depth.png`];
-    r.group.position.copy(origin);
-    r.group.rotation.y = yaw;
-    r.origin = origin.clone();
-    r.yaw = yaw;
-    r.walkDist = cfg.walk; // metres walked forward through the room
-    r.walkEnd = origin.clone().add(tmpV.set(0, 0, -r.walkDist).applyAxisAngle(up, yaw));
-    r.anchors3D = cfg.anchors.map(([u, v, label, detail]) => ({
-      local: unprojectCPU(cfg, u, v, sampleDepth(cfg.key, u, v)),
-      label,
-      detail,
-    }));
-    origin = r.walkEnd.clone().add(tmpV.set(0, 0, -1.5).applyAxisAngle(up, yaw));
-    yaw += cfg.turn * (Math.PI / 2);
-  }
+// Distant coastline ridges in atmospheric haze
+{
+  const ridge = (x0, x1, z, height, color, seedK) => {
+    const shape = new THREE.Shape();
+    shape.moveTo(x0, 0);
+    const n = 60;
+    for (let i = 0; i <= n; i++) {
+      const x = x0 + ((x1 - x0) * i) / n;
+      const t = i / n;
+      const y = height * (Math.sin(t * Math.PI) * 0.7 + 0.3 * Math.sin(t * 17 + seedK) * Math.sin(t * 5 + seedK * 2)) * (0.6 + 0.4 * Math.sin(t * 3 + seedK));
+      shape.lineTo(x, Math.max(0, y));
+    }
+    shape.lineTo(x1, 0);
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshBasicMaterial({ color, fog: false }));
+    m.position.set(0, -60, z);
+    scene.add(m);
+  };
+  ridge(-2600, -300, -2600, 180, new THREE.Color(0.55, 0.42, 0.5), 1.3);
+  ridge(-1800, 200, -2200, 110, new THREE.Color(0.45, 0.35, 0.44), 2.1);
+  ridge(900, 3200, -2800, 150, new THREE.Color(0.6, 0.46, 0.52), 0.7);
+  ridge(1500, 3400, -1900, 90, new THREE.Color(0.5, 0.38, 0.46), 3.3);
 }
 
-/* ---------- Motion-graphic labels ---------- */
-const annoLayer = document.createElement("div");
-annoLayer.className = "annos";
-document.body.appendChild(annoLayer);
-let annoEls = [];
-function buildAnnos(r) {
-  annoLayer.innerHTML = "";
-  annoEls = r.anchors3D.map((a, i) => {
-    const el = document.createElement("div");
-    el.className = "anno";
-    el.style.setProperty("--d", `${0.15 + i * 0.18}s`);
-    el.innerHTML = `<i class="anno__dot"></i><span class="anno__line"></span><span class="anno__label"><b>${String(i + 1).padStart(2, "0")}</b>${a.label}<small>${a.detail}</small></span>`;
-    annoLayer.appendChild(el);
-    return { el, a };
-  });
-}
-const titleEl = document.createElement("div");
-titleEl.className = "roomtitle";
-document.body.appendChild(titleEl);
-function showTitle(name, n) {
-  titleEl.innerHTML = `<span class="roomtitle__num">${String(n).padStart(2, "0")}</span><span class="roomtitle__name">${[...name].map((ch, i) => `<i style="--i:${i}">${ch === " " ? "&nbsp;" : ch}</i>`).join("")}</span>`;
-  titleEl.classList.remove("show");
-  void titleEl.offsetWidth;
-  titleEl.classList.add("show");
-}
+// Environment for reflections: the sunset sky itself
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+envScene.add(new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMat));
+const env = pmrem.fromScene(envScene, 0.03).texture;
+scene.environment = env;
 
-/* ---------- Scroll → walkthrough time ---------- */
+// Low golden sun with soft shadows, sky fill
+const sunLight = new THREE.DirectionalLight(new THREE.Color(1.0, 0.58, 0.32), 3.4);
+sunLight.position.copy(SUN).multiplyScalar(80).add(new THREE.Vector3(0, 12, 0));
+sunLight.target.position.set(0, 0, -6);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(isMobile ? 2048 : 4096, isMobile ? 2048 : 4096);
+Object.assign(sunLight.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 220 });
+sunLight.shadow.bias = -0.0003;
+sunLight.shadow.normalBias = 0.03;
+scene.add(sunLight, sunLight.target);
+scene.add(new THREE.HemisphereLight(new THREE.Color(0.66, 0.55, 0.62), new THREE.Color(0.36, 0.26, 0.18), 0.42));
+
+const villa = buildVilla(scene, { env, lite: isMobile, sunDir: SUN });
+renderer.shadowMap.needsUpdate = true;
+
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.05, 9000);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 0.26, 0.4, 0.96);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* =========================================================
+   ONE CONTINUOUS WALK — keyframes in "section units"
+   0 hero · 1 studio · 2 projects · 3 services · 4 process · 5 quote · 6 contact · 7 end
+   ========================================================= */
+const K = [
+  { t: 0.0, pos: [-14, 1.4, 31], look: [0, 3.2, -2], room: "Arrival" },
+  { t: 0.7, pos: [-4, 0.9, 15], look: [0, 3.0, -2], room: "Arrival" },
+  { t: 1.2, pos: [0, 0.75, 8.2], look: [0, 2.4, -2], room: "Entrance" },
+  { t: 1.6, pos: [0, 1.7, 2.4], look: [0, 2.6, -5], room: "Entrance Hall" },
+  { t: 2.0, pos: [0, 1.7, -2.2], look: [0, 4.4, -9], room: "Entrance Hall" },
+  { t: 2.5, pos: [-0.3, 1.7, -4.4], look: [0.8, 2.1, -14], room: "Grand Living" },
+  { t: 3.0, pos: [1.6, 1.5, -5.9], look: [6.6, 1.7, -8.6], room: "Grand Living" },
+  { t: 3.4, pos: [-4.2, 1.7, -3.6], look: [-12, 1.5, -6], room: "Kitchen" },
+  { t: 3.8, pos: [-8.6, 1.7, -3.9], look: [-19.6, 1.4, -6.6], room: "Kitchen" },
+  { t: 4.2, pos: [-10.2, 1.7, -8.7], look: [-15, 1.1, -14], room: "Dining" },
+  { t: 4.65, pos: [-2.2, 1.7, -3.1], look: [7, 1.7, -2], room: "Gallery" },
+  { t: 5.0, pos: [8.6, 1.7, -2.1], look: [12, 1.6, -6], room: "Master Suite" },
+  { t: 5.4, pos: [15.6, 1.65, -2.9], look: [11, 1.3, -14], room: "Master Suite" },
+  { t: 5.9, pos: [14.8, 1.7, -11.2], look: [12.5, 1.4, -24], room: "Master Suite" },
+  { t: 6.4, pos: [13.2, 1.8, -20.2], look: [-6, 0.6, -22.5], room: "Infinity Pool" },
+  { t: 7.0, pos: [3.5, 2.6, -15.4], look: [12, 0.4, -60], room: "Sunset Terrace" },
+];
+const posCurve = new THREE.CatmullRomCurve3(K.map((k) => new THREE.Vector3(...k.pos)), false, "centripetal");
+const lookCurve = new THREE.CatmullRomCurve3(K.map((k) => new THREE.Vector3(...k.look)), false, "centripetal");
+
+// Labels anchored to real points in the model, shown while the camera is nearby
+const ANNOS = [
+  { at: [0, 5.5, -0.5], t: [0.1, 1.3], label: "Bronze-framed glazing", detail: "7.6 m entrance façade" },
+  { at: [-5.7, 4.5, 0.1], t: [0.1, 1.3], label: "Split-face limestone", detail: "Hand-dressed cladding" },
+  { at: [0, 5.2, -3], t: [1.7, 2.3], label: "Crystal cascade chandelier", detail: "Hand-blown glass, brass" },
+  { at: [0.5, 3.4, -14], t: [2.25, 2.8], label: "Double-height glazing", detail: "Uninterrupted sea view" },
+  { at: [6.5, 0.7, -8], t: [2.75, 3.2], label: "Linear fireplace", detail: "Book-matched marble hearth" },
+  { at: [-0.7, 0.42, -9.2], t: [2.35, 2.95], label: "Emperador coffee table", detail: "Polished marble" },
+  { at: [-13.5, 0.97, -5.4], t: [3.6, 4.05], label: "Quartzite waterfall island", detail: "Single slab, 5 m" },
+  { at: [-13.5, 2.3, -5.9], t: [3.6, 4.05], label: "Blown-glass pendants", detail: "Brass & amber filament" },
+  { at: [-14.8, 0.8, -11.5], t: [4.05, 4.45], label: "Dining for ten", detail: "Walnut & bouclé" },
+  { at: [7.7, 2.4, -7.5], t: [5.2, 5.75], label: "Stone feature wall", detail: "Backlit relief" },
+  { at: [14, 2, -14], t: [5.2, 5.9], label: "Panoramic sliders", detail: "Open onto the terrace" },
+  { at: [9.2, -0.6, -22.5], t: [6.2, 6.85], label: "Infinity edge", detail: "Cascading water wall" },
+  { at: [15.2, 0.5, -17], t: [6.25, 6.9], label: "Fire lounge", detail: "Under the cantilever" },
+];
+
 const sections = [...document.querySelectorAll("[data-scene]")];
 let sectionTops = [];
 function measure() {
@@ -359,156 +218,94 @@ function sceneTime() {
   }
   return sectionTops.length - 1;
 }
+// Section units → curve parameter (piecewise-linear between keyframes, so the camera never pauses)
+function curveU(st) {
+  let i = 0;
+  while (i < K.length - 2 && st > K[i + 1].t) i++;
+  const f = clamp01((st - K[i].t) / (K[i + 1].t - K[i].t));
+  return { u: (i + f) / (K.length - 1), room: K[f < 0.5 ? i : i + 1].room };
+}
 
-/* ---------- Pointer ---------- */
-const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
-window.addEventListener("pointermove", (e) => {
-  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -((e.clientY / window.innerHeight) * 2 - 1);
+/* ---------- Labels ---------- */
+const annoLayer = document.createElement("div");
+annoLayer.className = "annos on";
+document.body.appendChild(annoLayer);
+const annoEls = ANNOS.map((a, i) => {
+  const el = document.createElement("div");
+  el.className = "anno";
+  el.style.setProperty("--d", "0s");
+  el.innerHTML = `<i class="anno__dot"></i><span class="anno__line"></span><span class="anno__label">${a.label}<small>${a.detail}</small></span>`;
+  annoLayer.appendChild(el);
+  return { el, a, pos: new THREE.Vector3(...a.at) };
 });
 
 /* ---------- Render loop ---------- */
 let started = false;
-let ready = false;
-let intro = 0;
 let tSmooth = 0;
-let prevT = 0;
-let stepPhase = 0;
-let bobAmt = 0;
 let scrollP = 0;
-let lastRoom = -1;
-let annoRoom = -1;
+let lastRoom = "";
+const uniqueSrcs = ["villa"];
+let loadedCount = 1;
 const roomName = document.getElementById("roomName");
 const roomNum = document.getElementById("roomNum");
-const clock = new THREE.Clock();
+const roomList = [...new Set(K.map((k) => k.room))];
 const camPos = new THREE.Vector3();
-const lookDir = new THREE.Vector3();
+const camLook = new THREE.Vector3();
 const proj = new THREE.Vector3();
-
-function setRoomState(r, solid, scatter, gather) {
-  r.group.visible = solid > 0.001 || gather > 0.001;
-  r.front.material.uniforms.solid.value = solid;
-  r.back.material.uniforms.solid.value = solid;
-  r.points.visible = gather > 0.001 && solid < 0.999;
-  r.points.material.uniforms.scatter.value = scatter;
-  r.points.material.uniforms.gather.value = gather;
-}
-
-assetsReady.then(() => {
-  layoutRooms();
-  ready = true;
-});
+const clock = new THREE.Clock();
 
 function tick() {
   const dt = Math.min(clock.getDelta(), 0.05);
   const t = clock.elapsedTime;
+  const target = sceneTime();
+  tSmooth = lerp(tSmooth, target, 1 - Math.pow(0.0005, dt * (reducedMotion ? 6 : 1)));
+  const { u, room } = curveU(tSmooth);
+  posCurve.getPoint(u, camPos);
+  lookCurve.getPoint(u, camLook);
+  camera.position.copy(camPos);
+  camera.lookAt(camLook);
+
+  // Entrance doors swing open as you approach
+  const open = smooth(clamp01((6 - camPos.z) / 4.5));
+  villa.doors[0].rotation.y = open * 1.35;
+  villa.doors[1].rotation.y = -open * 1.35;
+
+  villa.update(t);
+  skyMat.uniforms.time.value = t;
+  seaMat.uniforms.time.value = t;
+  seaMat.uniforms.camPos.value.copy(camera.position);
+
+  if (room !== lastRoom) {
+    lastRoom = room;
+    roomName.textContent = room;
+    roomNum.textContent = String(roomList.indexOf(room) + 1).padStart(2, "0");
+  }
+
+  for (const { el, a, pos } of annoEls) {
+    const on = started && tSmooth > a.t[0] && tSmooth < a.t[1];
+    proj.copy(pos).project(camera);
+    const vis = on && proj.z < 1 && Math.abs(proj.x) < 0.92 && Math.abs(proj.y) < 0.9;
+    el.classList.toggle("show", vis);
+    if (vis) el.style.transform = `translate(${((proj.x + 1) / 2) * window.innerWidth}px, ${((1 - proj.y) / 2) * window.innerHeight}px)`;
+  }
+
+  composer.render();
   requestAnimationFrame(tick);
-  if (!ready) {
-    renderer.render(scene, camera);
-    return;
-  }
-  if (started) intro = Math.min(1, intro + dt * 0.32);
-
-  tSmooth = lerp(tSmooth, sceneTime(), 1 - Math.pow(0.001, dt * (reducedMotion ? 6 : 1.3)));
-  let i = 0;
-  while (i < rooms.length - 1 && tSmooth >= rooms[i + 1].cfg.t) i++;
-  const cur = rooms[i];
-  const next = rooms[i + 1];
-  const segEnd = next ? next.cfg.t : END_T;
-  const f = clamp01((tSmooth - cur.cfg.t) / (segEnd - cur.cfg.t));
-  const hold = next ? HOLD : 1;
-  const w = ease(clamp01(f / hold));
-
-  for (const r of rooms) if (r !== cur && r !== next) r.group.visible = false;
-
-  // Intro: the first room assembles itself from particles
-  const introScatter = 1 - ease(clamp01(intro / 0.6));
-  const introSolid = ease(clamp01((intro - 0.45) / 0.55));
-
-  let yaw = cur.yaw;
-  camPos.copy(cur.origin).lerp(cur.walkEnd, w);
-  let k = 0;
-  if (next && f > hold) {
-    k = (f - hold) / (1 - hold);
-    // The room breaks into particles first, then you turn and the next room assembles
-    camPos.copy(cur.walkEnd).lerp(next.origin, ease(k));
-    yaw = lerp(cur.yaw, next.yaw, ease(clamp01((k - 0.15) / 0.85)));
-    setRoomState(cur, 1 - smooth(clamp01(k / 0.28)), smooth(clamp01((k - 0.04) / 0.55)), 1);
-    setRoomState(next, smooth(clamp01((k - 0.66) / 0.34)), 1 - ease(clamp01((k - 0.25) / 0.5)), smooth(clamp01((k - 0.15) / 0.3)));
-  } else {
-    const isFirst = i === 0;
-    setRoomState(cur, isFirst ? Math.min(introSolid, 1) : 1, isFirst ? introScatter : 0, isFirst ? clamp01(intro * 3) : 1);
-    if (next) setRoomState(next, 0, 1, 0);
-  }
-
-  // Walking: head-bob with scroll-driven steps, plus a slight lean
-  const moved = Math.abs(tSmooth - prevT);
-  prevT = tSmooth;
-  stepPhase += moved * Math.PI * 2 * 8;
-  bobAmt = lerp(bobAmt, reducedMotion ? 0 : clamp01((moved / Math.max(dt, 1e-3)) * 2.5), 0.08);
-  pointer.sx = lerp(pointer.sx, reducedMotion ? 0 : pointer.x, 0.05);
-  pointer.sy = lerp(pointer.sy, reducedMotion ? 0 : pointer.y, 0.05);
-
-  const side = tmpV.set(1, 0, 0).applyAxisAngle(up, yaw);
-  camera.position.copy(camPos)
-    .addScaledVector(side, pointer.sx * 0.22 + Math.sin(stepPhase) * 0.05 * bobAmt)
-    .add(tmpV.set(0, pointer.sy * 0.12 + Math.abs(Math.sin(stepPhase)) * 0.06 * bobAmt + (1 - ease(clamp01(intro))) * 1.2, 0));
-  const look = yaw + pointer.sx * -0.12 + Math.sin(t * 0.2) * 0.012;
-  lookDir.set(-Math.sin(look), pointer.sy * 0.08 + Math.sin(t * 0.17) * 0.006, -Math.cos(look));
-  camera.lookAt(tmpV.copy(camera.position).add(lookDir));
-  camera.rotateZ(Math.sin(stepPhase) * 0.006 * bobAmt);
-
-  for (const r of rooms) r.points.material.uniforms.time.value = t;
-  dust.uniforms.time.value = t;
-
-  // Room label + big motion title
-  const activeIdx = k > 0.5 ? i + 1 : i;
-  if (activeIdx !== lastRoom) {
-    lastRoom = activeIdx;
-    const r = rooms[activeIdx];
-    roomName.textContent = r.cfg.room;
-    roomNum.textContent = String(activeIdx + 1).padStart(2, "0");
-    if (started) showTitle(r.cfg.room, activeIdx + 1);
-  }
-
-  // Labels: shown while standing in a fully built room
-  const showAnnos = started && intro > 0.95 && k === 0 && f < hold * 0.92;
-  if (showAnnos && annoRoom !== i) {
-    annoRoom = i;
-    buildAnnos(cur);
-  }
-  annoLayer.classList.toggle("on", showAnnos && annoRoom === i);
-  if (annoRoom >= 0) {
-    const r = rooms[annoRoom];
-    r.group.updateMatrixWorld();
-    for (const { el, a } of annoEls) {
-      proj.copy(a.local).applyMatrix4(r.group.matrixWorld).project(camera);
-      const vis = proj.z < 1 && Math.abs(proj.x) < 0.98 && Math.abs(proj.y) < 0.95;
-      el.style.transform = `translate(${((proj.x + 1) / 2) * window.innerWidth}px, ${((1 - proj.y) / 2) * window.innerHeight}px)`;
-      el.style.opacity = vis ? "" : "0";
-    }
-  }
-
-  renderer.render(scene, camera);
 }
 
 function onResize() {
-  const aspect = window.innerWidth / window.innerHeight;
-  camera.aspect = aspect;
-  // cover-fit: match the photo's framing, cropping rather than letterboxing
-  const vfovImg = 2 * Math.atan(Math.tan(HFOV / 2) / IMG_ASPECT);
-  camera.fov = THREE.MathUtils.radToDeg(aspect >= IMG_ASPECT ? 2 * Math.atan(Math.tan(HFOV / 2) / aspect) : vfovImg);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.fov = window.innerWidth < window.innerHeight ? 72 : 55;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  const px = (window.innerWidth * renderer.getPixelRatio() * (aspect >= IMG_ASPECT ? 1 : IMG_ASPECT / aspect)) / PX;
-  for (const r of rooms) r.points.material.uniforms.pxScale.value = Math.max(1.5, px * 1.25);
-  dust.uniforms.px.value = renderer.getPixelRatio();
+  composer.setSize(window.innerWidth, window.innerHeight);
+  bloom.resolution.set(window.innerWidth / 2, window.innerHeight / 2);
   measure();
 }
 window.addEventListener("resize", onResize);
 window.addEventListener("load", measure);
 onResize();
-tSmooth = prevT = sceneTime();
+tSmooth = sceneTime();
 tick();
 
 /* =========================================================
