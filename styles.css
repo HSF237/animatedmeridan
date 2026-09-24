@@ -336,6 +336,54 @@ body.ready .hero__title .line:nth-child(4) .word { transition-delay: 0.3s; }
   .timeline__line i { transform-origin: top; transform: scaleY(0); }
   .step__dot { top: 0.45rem; left: -1.95rem; }
 }
+/* ---------- 3D labels (motion graphics) ---------- */
+.annos { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+.anno { position: absolute; left: 0; top: 0; transition: opacity 0.4s; will-change: transform; }
+.anno__dot {
+  position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%;
+  border: 1px solid var(--accent); transform: scale(0); transition: transform 0.6s var(--ease) var(--d);
+}
+.anno__dot::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--accent); }
+.anno__dot::before {
+  content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 1px solid rgba(217, 164, 91, 0.6);
+  animation: annoPulse 2.4s var(--ease) infinite; animation-delay: var(--d);
+}
+.anno__line {
+  position: absolute; left: 0; top: 0; width: 70px; height: 1px; background: linear-gradient(90deg, var(--accent), rgba(217, 164, 91, 0.3));
+  transform-origin: left; transform: rotate(-40deg) scaleX(0); transition: transform 0.7s var(--ease) calc(var(--d) + 0.25s);
+}
+.anno__label {
+  position: absolute; left: 54px; top: -62px; white-space: nowrap; padding: 0.45rem 0.8rem 0.5rem;
+  background: rgba(11, 12, 15, 0.55); border: 1px solid rgba(217, 164, 91, 0.35); border-radius: 6px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font-size: 0.72rem; letter-spacing: 0.08em; color: var(--ink);
+  clip-path: inset(0 100% 0 0); transition: clip-path 0.8s var(--ease) calc(var(--d) + 0.6s);
+}
+.anno__label b { color: var(--accent); font-weight: 500; margin-right: 0.55em; }
+.anno__label small { display: block; margin-top: 0.15rem; font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.annos.on .anno__dot { transform: scale(1); }
+.annos.on .anno__line { transform: rotate(-40deg) scaleX(1); }
+.annos.on .anno__label { clip-path: inset(0 0 0 0); }
+@keyframes annoPulse { 0% { transform: scale(0.4); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+
+.roomtitle {
+  position: fixed; right: clamp(1rem, 4vw, 3rem); bottom: 4.2rem; z-index: 2; pointer-events: none; text-align: right;
+  font-family: var(--serif); font-weight: 300; color: var(--ink); opacity: 0;
+}
+.roomtitle__num { display: block; font-family: var(--sans); font-size: 0.7rem; letter-spacing: 0.4em; color: var(--accent); margin-bottom: 0.3rem; }
+.roomtitle__name { display: block; font-size: clamp(2.4rem, 6vw, 5.6rem); line-height: 1; letter-spacing: -0.02em; overflow: hidden; text-shadow: 0 4px 40px rgba(11, 12, 15, 0.6); }
+.roomtitle__name i { display: inline-block; font-style: normal; transform: translateY(110%); }
+.roomtitle.show { animation: titleLife 3.6s linear forwards; }
+.roomtitle.show .roomtitle__name i { animation: titleChar 3.6s var(--ease) forwards; animation-delay: calc(var(--i) * 0.035s); }
+@keyframes titleLife { 0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes titleChar { 0% { transform: translateY(110%) rotate(6deg); } 22%, 78% { transform: none; } 100% { transform: translateY(-110%); } }
+@media (max-width: 760px) {
+  .anno__label { font-size: 0.62rem; left: 40px; top: -52px; }
+  .anno__line { width: 54px; }
+  .anno:nth-child(n + 3) { display: none; }
+  .roomtitle { bottom: 3.6rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   html { scroll-behavior: auto; }
