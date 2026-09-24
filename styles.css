@@ -33,7 +33,8 @@ em { font-family: var(--serif); font-style: italic; font-weight: 300; color: var
 .vignette {
   position: fixed; inset: 0; z-index: 1; pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(11, 12, 15, 0.72) 0%, rgba(11, 12, 15, 0.3) 38%, transparent 60%),
+    linear-gradient(90deg, rgba(11, 12, 15, 0.82) 0%, rgba(11, 12, 15, 0.5) 34%, rgba(11, 12, 15, 0.1) 58%, transparent 70%),
+    linear-gradient(180deg, rgba(11, 12, 15, 0.45) 0%, transparent 16%),
     radial-gradient(ellipse at 60% 45%, transparent 40%, rgba(11, 12, 15, 0.8) 100%);
 }
 .grain {

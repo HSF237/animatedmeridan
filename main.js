@@ -1,10 +1,4 @@
 import * as THREE from "three";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { buildVilla } from "./villa.js?v=4";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isMobile = window.matchMedia("(max-width: 760px)").matches;
@@ -16,110 +10,171 @@ document.body.classList.add("loading");
 document.getElementById("year").textContent = new Date().getFullYear();
 
 /* =========================================================
-   RENDERER + SCENE — a scroll-driven walkthrough of a luxury villa
+   CINEMATIC WALKTHROUGH
+   Each room is a photograph rendered through a depth-aware shader.
+   Scrolling walks you forward (near areas grow faster than far ones,
+   with a gentle head-bob in step with your scroll), and to reach the
+   next room you turn — the camera rotates 90° around the corner, where
+   the next room waits on the adjoining wall. No fades, no blur.
    ========================================================= */
+// vp: the point the camera moves towards (uv, y up)
+// depth: [radial weight, floor weight] — how "near" edges and the lower frame are
+// focus: horizontal crop centre on narrow screens
+const SHOTS = [
+  { src: "assets/villa/arrival.webp", room: "Arrival", t: 0.0, vp: [0.38, 0.5], depth: [0.45, 0.75], focus: 0.42, turn: 1 },
+  { src: "assets/villa/terrace.webp", room: "Infinity Terrace", t: 1.0, vp: [0.2, 0.62], depth: [0.4, 0.8], focus: 0.4, turn: -1 },
+  { src: "assets/villa/living.webp", room: "Grand Living", t: 2.05, vp: [0.52, 0.52], depth: [0.75, 0.45], focus: 0.5, turn: -1 },
+  { src: "assets/villa/kitchen.webp", room: "Kitchen", t: 3.15, vp: [0.86, 0.55], depth: [0.7, 0.5], focus: 0.62, turn: 1 },
+  { src: "assets/villa/suite.webp", room: "Master Suite", t: 4.25, vp: [0.66, 0.55], depth: [0.7, 0.5], focus: 0.62, turn: 1 },
+  { src: "assets/villa/terrace.webp", room: "Sunset Terrace", t: 5.4, vp: [0.93, 0.56], depth: [0.4, 0.8], focus: 0.8 },
+];
+const END_T = 7;
+const HOLD = 0.55; // portion of each segment spent walking through a room before turning to the next
+
 const canvas = document.getElementById("scene");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
-// The villa is static, so shadow maps are rendered once and reused
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.shadowMap.autoUpdate = false;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0a0c12, 0.011);
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-// Dusk sky: deep navy overhead, warm afterglow on the horizon behind the house
-const skyMat = new THREE.ShaderMaterial({
-  side: THREE.BackSide,
-  depthWrite: false,
-  fog: false,
-  uniforms: {},
-  vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
-  fragmentShader: `varying vec3 vDir;
-    void main(){
-      float h = vDir.y;
-      vec3 top = vec3(0.012,0.016,0.035);
-      vec3 mid = vec3(0.05,0.05,0.1);
-      vec3 col = mix(mid, top, smoothstep(0.0, 0.55, h));
-      float glowAmt = exp(-abs(h) * 9.0) * (0.35 + 0.65 * max(0.0, -vDir.z));
-      col += vec3(0.55, 0.26, 0.14) * glowAmt * 0.55;
-      col = mix(col, vec3(0.012,0.013,0.018), smoothstep(0.0, -0.12, h));
-      gl_FragColor = vec4(col, 1.0);
-    }`,
+const loaderTex = new THREE.TextureLoader();
+let loadedCount = 0;
+const uniqueSrcs = [...new Set(SHOTS.map((s) => s.src))];
+const texBySrc = {};
+Promise.all(
+  uniqueSrcs.map(
+    (src) =>
+      new Promise((resolve) => {
+        loaderTex.load(
+          src,
+          (t) => {
+            t.colorSpace = THREE.SRGBColorSpace;
+            t.minFilter = THREE.LinearMipmapLinearFilter;
+            t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+            t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+            texBySrc[src] = t;
+            loadedCount++;
+            resolve();
+          },
+          undefined,
+          () => { loadedCount++; resolve(); }
+        );
+      })
+  )
+);
+const blank = new THREE.DataTexture(new Uint8Array([11, 12, 15, 255]), 1, 1);
+blank.needsUpdate = true;
+
+const shotUniforms = () => ({
+  tex: { value: blank },
+  aspect: { value: 16 / 9 },
+  vp: { value: new THREE.Vector2(0.5, 0.5) },
+  depth: { value: new THREE.Vector2(0.5, 0.5) },
+  focus: { value: 0.5 },
+  push: { value: 0 },
 });
-const sky = new THREE.Mesh(new THREE.SphereGeometry(700, 48, 24), skyMat);
-sky.renderOrder = -1;
-const moon = new THREE.Mesh(new THREE.SphereGeometry(9, 32, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 2.4, 2.2), fog: false }));
-moon.position.set(-220, 170, -480);
+const A = shotUniforms();
+const B = shotUniforms();
+const prefix = (o, p) => Object.fromEntries(Object.entries(o).map(([k, v]) => [p + k, v]));
 
-// Night environment map for glass and water reflections
-const pmrem = new THREE.PMREMGenerator(renderer);
-const skyScene = new THREE.Scene();
-skyScene.add(sky.clone(), moon.clone());
-const nightEnv = pmrem.fromScene(skyScene, 0.02).texture;
-// Soft studio environment for interior materials
-scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
-scene.add(sky, moon);
+const material = new THREE.ShaderMaterial({
+  uniforms: {
+    ...prefix(A, "a_"),
+    ...prefix(B, "b_"),
+    turnAmt: { value: 0 },
+    turnDir: { value: 1 },
+    bob: { value: new THREE.Vector3() },
+    screenAspect: { value: window.innerWidth / window.innerHeight },
+    pointer: { value: new THREE.Vector2() },
+    time: { value: 0 },
+  },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: `
+    precision highp float;
+    varying vec2 vUv;
+    uniform float screenAspect, turnAmt, turnDir, time;
+    uniform vec2 pointer;
+    uniform vec3 bob; // x, y offset and roll from walking
+    uniform sampler2D a_tex, b_tex;
+    uniform float a_aspect, a_focus, a_push, b_aspect, b_focus, b_push;
+    uniform vec2 a_vp, a_depth, b_vp, b_depth;
 
-// Stars
-{
-  const n = 1800;
-  const p = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) {
-    const th = Math.random() * Math.PI * 2;
-    const ph = Math.acos(Math.random() * 0.92);
-    p.set([Math.sin(ph) * Math.cos(th) * 650, Math.cos(ph) * 650, Math.sin(ph) * Math.sin(th) * 650], i * 3);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.BufferAttribute(p, 3));
-  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xdfe6ff, size: 1.2, sizeAttenuation: false, fog: false, transparent: true, opacity: 0.75 })));
+    // Map a face uv to image uv with "cover" fitting and a horizontal focus point
+    vec2 coverUv(vec2 uv, float imgAspect, float focus) {
+      vec2 scale = screenAspect < imgAspect ? vec2(screenAspect / imgAspect, 1.0) : vec2(1.0, imgAspect / screenAspect);
+      float fx = clamp(focus, scale.x * 0.5, 1.0 - scale.x * 0.5);
+      return vec2(fx, 0.5) + (uv - 0.5) * scale;
+    }
+    // Approximate "nearness": far at the vanishing point, near at the edges and the floor
+    float nearness(vec2 uv, vec2 vp, vec2 w, float imgAspect) {
+      float r = distance(uv * vec2(imgAspect, 1.0), vp * vec2(imgAspect, 1.0)) / imgAspect;
+      float radial = smoothstep(0.02, 0.75, r);
+      float floorN = smoothstep(vp.y, 0.0, uv.y);
+      return clamp(w.x * radial + w.y * floorN, 0.0, 1.0);
+    }
+    vec3 shot(sampler2D tex, vec2 faceUv, float imgAspect, float focus, vec2 vp, vec2 w, float push) {
+      vec2 uv = coverUv(faceUv, imgAspect, focus);
+      float n = nearness(uv, vp, w, imgAspect);
+      // walking forward: depth-aware dolly towards the vanishing point
+      float s = 1.0 + push * (0.18 + 0.55 * n);
+      vec2 p = vp + (uv - vp) / s;
+      // parallax: near things shift more than far things
+      p += pointer * vec2(0.012, 0.008) * (n - 0.35);
+      p += vec2(sin(time * 0.21), cos(time * 0.17)) * 0.0015 * n;
+      return texture2D(tex, clamp(p, 0.001, 0.999)).rgb;
+    }
+    void main() {
+      // Screen → view ray. Horizontal FOV is 90°, so each room fills one wall of a cube around the viewer.
+      vec2 sc = vUv * 2.0 - 1.0;
+      float cr = cos(bob.z), sr = sin(bob.z);
+      sc = mat2(cr, -sr, sr, cr) * sc + bob.xy;
+      vec3 d = normalize(vec3(sc.x, sc.y / screenAspect, -1.0));
+      // Turn the head
+      float yaw = -turnDir * turnAmt * 1.5707963;
+      float cy = cos(yaw), sy = sin(yaw);
+      d = vec3(cy * d.x + sy * d.z, d.y, -sy * d.x + cy * d.z);
+
+      vec3 col;
+      float corner;
+      // Current room on the front wall (z = -1); next room on the side wall (x = ±1)
+      float side = d.x * turnDir;
+      if (-d.z >= side) {
+        vec3 h = d / -d.z;
+        vec2 f = vec2(h.x * 0.5 + 0.5, h.y * screenAspect * 0.5 + 0.5);
+        col = shot(a_tex, f, a_aspect, a_focus, a_vp, a_depth, a_push);
+        corner = 1.0 - h.x * turnDir;
+      } else {
+        vec3 h = d / side;
+        vec2 f = vec2(turnDir * h.z * 0.5 + 0.5, h.y * screenAspect * 0.5 + 0.5);
+        col = shot(b_tex, f, b_aspect, b_focus, b_vp, b_depth, b_push);
+        corner = 1.0 + h.z;
+      }
+      // soft ambient occlusion where the two walls meet, only while turning
+      float turning = smoothstep(0.0, 0.05, turnAmt) * smoothstep(1.0, 0.95, turnAmt);
+      col *= 1.0 - 0.45 * exp(-corner * 28.0) * turning;
+      // a slim stone jamb where the walls meet, like walking past a door frame
+      col = mix(col, vec3(0.16, 0.13, 0.1), smoothstep(0.014, 0.008, corner) * turning);
+      gl_FragColor = vec4(col, 1.0);
+      #include <colorspace_fragment>
+    }`,
+  depthTest: false,
+  depthWrite: false,
+});
+scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+
+function assignShot(target, shot) {
+  const tex = texBySrc[shot.src] || blank;
+  if (target.tex.value !== tex) target.tex.value = tex;
+  target.aspect.value = tex.image && tex.image.width ? tex.image.width / tex.image.height : 16 / 9;
+  target.vp.value.set(...shot.vp);
+  target.depth.value.set(...shot.depth);
+  target.focus.value = shot.focus;
 }
 
-scene.add(new THREE.HemisphereLight(0x2c3a5a, 0x0a0a0c, 0.45));
-const moonLight = new THREE.DirectionalLight(0x9fb4d8, 0.55);
-moonLight.position.set(-30, 40, 30);
-scene.add(moonLight);
-
-const villa = buildVilla(scene, { nightEnv, lite: isMobile });
-renderer.shadowMap.needsUpdate = true;
-
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 1500);
-
-// Post-processing: bloom for the lighting
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 0.55, 0.6, 0.92);
-composer.addPass(bloom);
-composer.addPass(new OutputPass());
-
-/* =========================================================
-   CAMERA PATH — keyframes in "section units"
-   0 hero · 1 studio · 2 projects · 3 services · 4 process · 5 quote · 6 contact · 7 end
-   ========================================================= */
-const K = [
-  { t: 0.0, pos: [8, 2.6, 26], look: [-3.5, 3.4, 0], room: "Arrival" },
-  { t: 0.85, pos: [1.6, 1.75, 10.5], look: [0, 2.1, 0], room: "Arrival" },
-  { t: 1.35, pos: [0.15, 1.7, 2.6], look: [0, 1.8, -4], room: "The Entrance" },
-  { t: 1.8, pos: [0, 1.7, -2.2], look: [-3.5, 2.6, -9], room: "Foyer" },
-  { t: 2.3, pos: [-1.2, 1.75, -6.4], look: [-10.5, 1.9, -9.2], room: "Grand Living" },
-  { t: 2.8, pos: [-1.0, 1.6, -3.6], look: [-5.6, 4.6, -11.5], room: "Grand Living" },
-  { t: 3.25, pos: [2.0, 1.75, -4.6], look: [7.5, 1.0, -9.4], room: "Kitchen" },
-  { t: 3.75, pos: [4.3, 1.7, -11.6], look: [10.4, 1.7, -17.5], room: "Wine & Dining" },
-  { t: 4.25, pos: [-1.6, 1.8, -9.2], look: [1.8, 2.0, -16], room: "Floating Stair" },
-  { t: 4.75, pos: [1.7, 3.45, -15.4], look: [2.6, 4.7, -9.5], room: "Floating Stair" },
-  { t: 5.25, pos: [4.2, 5.5, -12.6], look: [9.4, 4.4, -18.6], room: "Master Suite" },
-  { t: 5.75, pos: [0.6, 5.9, -15.2], look: [-3, 2.2, -32], room: "Gallery" },
-  { t: 6.35, pos: [-1.8, 1.6, -23.3], look: [-2, 0.4, -48], room: "Infinity Terrace" },
-  { t: 7.0, pos: [-6, 4.2, -44], look: [0, 3.2, -16], room: "Infinity Terrace" },
-];
-const posCurve = new THREE.CatmullRomCurve3(K.map((k) => new THREE.Vector3(...k.pos)), false, "centripetal");
-const lookCurve = new THREE.CatmullRomCurve3(K.map((k) => new THREE.Vector3(...k.look)), false, "centripetal");
-
+/* ---------- Scroll → walkthrough time ---------- */
 const sections = [...document.querySelectorAll("[data-scene]")];
 let sectionTops = [];
 function measure() {
@@ -128,7 +183,6 @@ function measure() {
   sectionTops.push(max);
   for (let i = 1; i < sectionTops.length; i++) sectionTops[i] = Math.max(sectionTops[i], sectionTops[i - 1] + 1);
 }
-// Scroll position → section units (0..7)
 function sceneTime() {
   const y = window.scrollY;
   for (let i = 0; i < sectionTops.length - 1; i++) {
@@ -136,115 +190,96 @@ function sceneTime() {
   }
   return sectionTops.length - 1;
 }
-// Section units → curve parameter, easing into each keyframe so shots "hold"
-function curveParam(st) {
-  let i = 0;
-  while (i < K.length - 2 && st > K[i + 1].t) i++;
-  const f = clamp01((st - K[i].t) / (K[i + 1].t - K[i].t));
-  return { u: (i + smooth(f)) / (K.length - 1), room: K[f < 0.5 ? i : i + 1].room, idx: f < 0.5 ? i : i + 1 };
-}
 
 /* ---------- Pointer ---------- */
 const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
 window.addEventListener("pointermove", (e) => {
   pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = (e.clientY / window.innerHeight) * 2 - 1;
+  pointer.y = -((e.clientY / window.innerHeight) * 2 - 1);
 });
 
 /* ---------- Render loop ---------- */
 let started = false;
 let intro = 0;
-let uSmooth = 0;
+let tSmooth = 0;
+let prevT = 0;
+let stepPhase = 0;
+let bobAmt = 0;
 let scrollP = 0;
-const camPos = new THREE.Vector3();
-const camLook = new THREE.Vector3();
 const roomName = document.getElementById("roomName");
 const roomNum = document.getElementById("roomNum");
+const roomList = [...new Set(SHOTS.map((s) => s.room))];
 let lastRoom = "";
 const clock = new THREE.Clock();
 
 function tick() {
   const dt = Math.min(clock.getDelta(), 0.05);
   const t = clock.elapsedTime;
-  if (started) intro = Math.min(1, intro + dt * 0.5);
+  if (started) intro = Math.min(1, intro + dt * 0.45);
   const ie = 1 - Math.pow(1 - intro, 3);
 
-  const { u, room, idx } = curveParam(sceneTime());
-  uSmooth = lerp(uSmooth, u, 1 - Math.pow(0.001, dt * (reducedMotion ? 6 : 1.6)));
-  posCurve.getPoint(uSmooth, camPos);
-  lookCurve.getPoint(uSmooth, camLook);
+  tSmooth = lerp(tSmooth, sceneTime(), 1 - Math.pow(0.001, dt * (reducedMotion ? 6 : 1.4)));
+  let i = 0;
+  while (i < SHOTS.length - 1 && tSmooth >= SHOTS[i + 1].t) i++;
+  const cur = SHOTS[i];
+  const next = SHOTS[i + 1];
+  const segEnd = next ? next.t : END_T;
+  const f = clamp01((tSmooth - cur.t) / (segEnd - cur.t));
 
-  // Intro: drift in from further out while the page reveals
-  camPos.z += (1 - ie) * 10;
-  camPos.y += (1 - ie) * 2;
+  assignShot(A, cur);
+  const hold = next ? HOLD : 1;
+  const inHold = clamp01(f / hold);
+  // Walk forward through the room; the final shot steps back out onto the terrace
+  const walk = next ? smooth(inHold) * 0.5 : 0.5 - smooth(inHold) * 0.45;
+  A.push.value = walk + (1 - ie) * 0.3;
 
-  pointer.sx = lerp(pointer.sx, pointer.x, 0.05);
-  pointer.sy = lerp(pointer.sy, pointer.y, 0.05);
-  const drift = reducedMotion ? 0 : 1;
-  camera.position.set(
-    camPos.x + pointer.sx * 0.25 * drift,
-    camPos.y - pointer.sy * 0.15 * drift + Math.sin(t * 0.6) * 0.03 * drift,
-    camPos.z
+  let turnAmt = 0;
+  if (next && f > hold) {
+    const k = (f - hold) / (1 - hold);
+    assignShot(B, next);
+    turnAmt = smooth(k);
+    A.push.value += smooth(k) * 0.12; // keep walking while turning
+    B.push.value = 0;
+    material.uniforms.turnDir.value = cur.turn;
+  }
+  material.uniforms.turnAmt.value = turnAmt;
+
+  // Head-bob: steps advance with scroll distance, and fade out when you stop
+  const moved = Math.abs(tSmooth - prevT);
+  prevT = tSmooth;
+  stepPhase += moved * Math.PI * 2 * 7;
+  bobAmt = lerp(bobAmt, reducedMotion ? 0 : clamp01((moved / Math.max(dt, 1e-3)) * 2.5), 0.08);
+  material.uniforms.bob.value.set(
+    Math.sin(stepPhase) * 0.006 * bobAmt,
+    Math.abs(Math.sin(stepPhase)) * 0.012 * bobAmt - 0.006 * bobAmt,
+    Math.sin(stepPhase) * 0.004 * bobAmt
   );
-  camera.lookAt(camLook.x + pointer.sx * 0.6 * drift, camLook.y - pointer.sy * 0.4 * drift, camLook.z);
 
-  // The pivot door swings open as the camera approaches
-  const open = smooth(clamp01((9 - camPos.z) / 6));
-  villa.door.rotation.y = -1.42 * open;
+  pointer.sx = lerp(pointer.sx, reducedMotion ? 0 : pointer.x, 0.05);
+  pointer.sy = lerp(pointer.sy, reducedMotion ? 0 : pointer.y, 0.05);
+  material.uniforms.pointer.value.set(pointer.sx, pointer.sy);
+  material.uniforms.time.value = t;
 
-  villa.update(t);
-
+  const room = (turnAmt > 0.5 ? next : cur).room;
   if (room !== lastRoom) {
     lastRoom = room;
     roomName.textContent = room;
-    const n = [...new Set(K.map((k) => k.room))].indexOf(room) + 1;
-    roomNum.textContent = String(n).padStart(2, "0");
+    roomNum.textContent = String(roomList.indexOf(room) + 1).padStart(2, "0");
   }
 
-  composer.render();
-  adaptQuality(dt);
+  renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
 
-// Adaptive resolution: drop the pixel ratio on slower devices, restore it when there's headroom
-const maxRatio = Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2);
-let ratio = maxRatio;
-let frameAcc = 0;
-let frameCount = 0;
-function adaptQuality(dt) {
-  if (!started) return;
-  frameAcc += dt;
-  frameCount++;
-  if (frameAcc < 1.5) return;
-  const avg = frameAcc / frameCount;
-  frameAcc = frameCount = 0;
-  let next = ratio;
-  if (avg > 1 / 40) next = Math.max(0.6, ratio - 0.25);
-  else if (avg < 1 / 58) next = Math.min(maxRatio, ratio + 0.25);
-  if (next !== ratio) {
-    ratio = next;
-    renderer.setPixelRatio(ratio);
-    composer.setPixelRatio(ratio);
-    composer.setSize(window.innerWidth, window.innerHeight);
-  }
-}
-
 function onResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.fov = window.innerWidth < window.innerHeight ? 68 : 50;
-  // On wide screens, frame the villa to the right of the content column
-  if (window.innerWidth > 960) camera.setViewOffset(window.innerWidth, window.innerHeight, -window.innerWidth * 0.14, 0, window.innerWidth, window.innerHeight);
-  else camera.clearViewOffset();
-  camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
-  bloom.resolution.set(window.innerWidth / 2, window.innerHeight / 2);
+  material.uniforms.screenAspect.value = window.innerWidth / window.innerHeight;
   measure();
 }
 window.addEventListener("resize", onResize);
 window.addEventListener("load", measure);
 onResize();
-uSmooth = curveParam(sceneTime()).u;
+tSmooth = prevT = sceneTime();
 tick();
 
 /* =========================================================
@@ -256,7 +291,8 @@ let loadVal = 0;
 const loadStart = performance.now();
 function loadStep() {
   const el = performance.now() - loadStart;
-  loadVal = Math.min(100, Math.floor(smooth(clamp01(el / 1800)) * 100));
+  const texP = loadedCount / uniqueSrcs.length;
+  loadVal = Math.min(100, Math.floor(Math.min(smooth(clamp01(el / 1800)), texP) * 100));
   loaderCount.textContent = loadVal;
   if (loadVal < 100) return requestAnimationFrame(loadStep);
   setTimeout(() => {
