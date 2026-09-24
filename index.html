@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meridian Arch Studio — Architecture in Motion</title>
+  <meta name="description" content="Meridian Arch Studio is an architecture and design practice shaping light, structure and space." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 28 16 4l12 24' fill='none' stroke='%23d9a45b' stroke-width='3'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="loader__inner">
+      <svg class="loader__mark" viewBox="0 0 120 120" aria-hidden="true">
+        <path d="M10 110 L60 10 L110 110" />
+        <path d="M32 110 L60 54 L88 110" />
+        <line x1="4" y1="110" x2="116" y2="110" />
+      </svg>
+      <div class="loader__count"><span id="loaderCount">0</span>%</div>
+      <div class="loader__label">Meridian Arch Studio</div>
+    </div>
+  </div>
+
+  <!-- 3D canvas -->
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Cursor -->
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+
+  <!-- Nav -->
+  <header class="nav" id="nav">
+    <a href="#top" class="nav__logo" data-hover>
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 28 16 4l12 24M10 28l6-12 6 12" /></svg>
+      <span>Meridian<em>Arch Studio</em></span>
+    </a>
+    <nav class="nav__links" id="navLinks">
+      <a href="#studio" data-hover>Studio</a>
+      <a href="#projects" data-hover>Projects</a>
+      <a href="#services" data-hover>Services</a>
+      <a href="#process" data-hover>Process</a>
+      <a href="#contact" class="nav__cta" data-hover>Start a project</a>
+    </nav>
+    <button class="nav__burger" id="burger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span></button>
+  </header>
+
+  <!-- Scroll progress -->
+  <div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar"></div></div>
+  <div class="coords" aria-hidden="true">
+    <span>N 40°44′</span><span id="coordLat">W 73°59′</span><span id="coordAlt">ALT 000 m</span>
+  </div>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero section" data-scene="0">
+      <div class="hero__content">
+        <p class="eyebrow reveal">Architecture · Interiors · Urban Design</p>
+        <h1 class="hero__title">
+          <span class="line"><span class="word">Designing</span></span>
+          <span class="line"><span class="word"><em>the space</em></span></span>
+          <span class="line"><span class="word">between light</span></span>
+          <span class="line"><span class="word">&amp; structure.</span></span>
+        </h1>
+        <p class="hero__sub reveal">Meridian Arch Studio crafts buildings that move with the sun, the city and the people who live inside them.</p>
+        <div class="hero__actions reveal">
+          <a href="#projects" class="btn btn--solid magnetic" data-hover><span>Explore work</span></a>
+          <a href="#studio" class="btn btn--ghost magnetic" data-hover><span>Our studio</span></a>
+        </div>
+      </div>
+      <div class="hero__meta reveal">
+        <div><strong>Est. 2009</strong><span>New York · Lisbon · Singapore</span></div>
+        <div class="scroll-hint"><span>Scroll</span><i></i></div>
+      </div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>Form follows light</span><b>✦</b><span>Structure as poetry</span><b>✦</b><span>Built to endure</span><b>✦</b><span>Space for people</span><b>✦</b>
+        <span>Form follows light</span><b>✦</b><span>Structure as poetry</span><b>✦</b><span>Built to endure</span><b>✦</b><span>Space for people</span><b>✦</b>
+      </div>
+    </div>
+
+    <!-- STUDIO -->
+    <section class="studio section" id="studio" data-scene="1">
+      <div class="container split">
+        <div class="split__left">
+          <p class="eyebrow reveal">01 — The Studio</p>
+          <h2 class="title reveal">A practice built on the <em>meridian</em> — the line where the sun stands highest.</h2>
+        </div>
+        <div class="split__right glass reveal">
+          <p>For over fifteen years we have designed towers, homes, cultural spaces and public landscapes across three continents. Every project begins with a single question: <strong>how will light move through this place?</strong></p>
+          <p>Our multidisciplinary team of architects, engineers and craftspeople combines parametric design with an obsession for material, proportion and detail.</p>
+          <div class="stats">
+            <div class="stat"><span class="stat__num" data-count="142">0</span><span class="stat__label">Projects built</span></div>
+            <div class="stat"><span class="stat__num" data-count="38">0</span><span class="stat__label">Design awards</span></div>
+            <div class="stat"><span class="stat__num" data-count="17">0</span><span class="stat__label">Countries</span></div>
+            <div class="stat"><span class="stat__num" data-count="64">0</span><span class="stat__label">Studio members</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="projects section" id="projects" data-scene="2">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow reveal">02 — Selected Work</p>
+          <h2 class="title reveal">Projects that <em>shape</em> skylines.</h2>
+        </div>
+        <div class="project-grid">
+          <article class="card tilt reveal" data-hover>
+            <div class="card__art">
+              <svg viewBox="0 0 300 220" class="draw">
+                <path d="M130 200V40l20-20 20 20v160M130 60h40M130 80h40M130 100h40M130 120h40M130 140h40M130 160h40M130 180h40" />
+                <path d="M60 200V110h50v90M190 200V90h55v110M20 200h260" />
+                <path d="M68 125h34M68 145h34M68 165h34M198 110h39M198 130h39M198 150h39M198 170h39" />
+              </svg>
+              <span class="card__tag">Mixed-use Tower</span>
+            </div>
+            <div class="card__body">
+              <h3>Solstice Tower</h3>
+              <p>A 62-storey twisting spire whose façade rotates 1.5° per floor to follow the path of the sun.</p>
+              <div class="card__meta"><span>Singapore</span><span>2024</span></div>
+            </div>
+          </article>
+          <article class="card tilt reveal" data-hover>
+            <div class="card__art">
+              <svg viewBox="0 0 300 220" class="draw">
+                <path d="M20 200h260M40 200c0-80 50-130 110-130s110 50 110 130" />
+                <path d="M70 200c0-60 35-100 80-100s80 40 80 100M100 200c0-38 22-66 50-66s50 28 50 66" />
+                <path d="M150 70V30M140 40h20" />
+              </svg>
+              <span class="card__tag">Cultural</span>
+            </div>
+            <div class="card__body">
+              <h3>Aurora Pavilion</h3>
+              <p>A concert hall of nested timber shells, tuned acoustically and lit entirely by a central oculus.</p>
+              <div class="card__meta"><span>Lisbon</span><span>2023</span></div>
+            </div>
+          </article>
+          <article class="card tilt reveal" data-hover>
+            <div class="card__art">
+              <svg viewBox="0 0 300 220" class="draw">
+                <path d="M20 200h260M40 200V130h90v70M130 160h130v40M40 130l45-40 45 40" />
+                <path d="M160 160v-40h70v40M55 150h25v25H55zM95 150h20v50M175 135h40" />
+                <path d="M240 200c0-20 10-35 20-35" />
+              </svg>
+              <span class="card__tag">Residential</span>
+            </div>
+            <div class="card__body">
+              <h3>Cantilever House</h3>
+              <p>A hillside residence floating eleven metres over a vineyard, anchored by a single stone core.</p>
+              <div class="card__meta"><span>Douro Valley</span><span>2022</span></div>
+            </div>
+          </article>
+          <article class="card tilt reveal" data-hover>
+            <div class="card__art">
+              <svg viewBox="0 0 300 220" class="draw">
+                <path d="M20 200h260M30 200l40-90h160l40 90" />
+                <path d="M70 110l20-40h120l20 40M90 70l15-30h90l15 30" />
+                <path d="M80 200v-60M120 200v-60M160 200v-60M200 200v-60M240 200v-60" />
+              </svg>
+              <span class="card__tag">Civic</span>
+            </div>
+            <div class="card__body">
+              <h3>Terrace Library</h3>
+              <p>A stepped public library with rooftop reading gardens cascading down to the river edge.</p>
+              <div class="card__meta"><span>New York</span><span>2021</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="services section" id="services" data-scene="3">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow reveal">03 — Services</p>
+          <h2 class="title reveal">From first sketch to <em>final stone.</em></h2>
+        </div>
+        <div class="service-list">
+          <div class="service reveal" data-hover>
+            <span class="service__num">01</span>
+            <h3>Architecture</h3>
+            <p>Concept, schematic and detailed design for towers, homes and cultural buildings.</p>
+            <span class="service__arrow">→</span>
+          </div>
+          <div class="service reveal" data-hover>
+            <span class="service__num">02</span>
+            <h3>Interior Design</h3>
+            <p>Spaces, furniture and material palettes composed as one continuous experience.</p>
+            <span class="service__arrow">→</span>
+          </div>
+          <div class="service reveal" data-hover>
+            <span class="service__num">03</span>
+            <h3>Urban Planning</h3>
+            <p>Masterplans and public realm strategies that knit buildings back into the city.</p>
+            <span class="service__arrow">→</span>
+          </div>
+          <div class="service reveal" data-hover>
+            <span class="service__num">04</span>
+            <h3>Computational Design</h3>
+            <p>Parametric modelling, daylight simulation and digital twins for every project.</p>
+            <span class="service__arrow">→</span>
+          </div>
+          <div class="service reveal" data-hover>
+            <span class="service__num">05</span>
+            <h3>Sustainability</h3>
+            <p>Net-zero strategies, mass timber and passive systems embedded from day one.</p>
+            <span class="service__arrow">→</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section class="process section" id="process" data-scene="4">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow reveal">04 — Process</p>
+          <h2 class="title reveal">How a building <em>comes alive.</em></h2>
+        </div>
+        <div class="timeline">
+          <div class="timeline__line"><i id="timelineFill"></i></div>
+          <div class="step reveal">
+            <span class="step__dot"></span>
+            <h4>Listen</h4>
+            <p>We study the site, the climate, the community and your ambitions before drawing a single line.</p>
+          </div>
+          <div class="step reveal">
+            <span class="step__dot"></span>
+            <h4>Imagine</h4>
+            <p>Rapid sketches and parametric studies explore hundreds of forms, tested against sun and wind.</p>
+          </div>
+          <div class="step reveal">
+            <span class="step__dot"></span>
+            <h4>Refine</h4>
+            <p>Immersive 3D walkthroughs and physical models let you inhabit the design long before it's built.</p>
+          </div>
+          <div class="step reveal">
+            <span class="step__dot"></span>
+            <h4>Build</h4>
+            <p>We stay on site through construction, protecting every detail from drawing to handover.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUOTE -->
+    <section class="quote section" data-scene="5">
+      <div class="container">
+        <blockquote class="reveal">
+          “Architecture is the learned game, correct and magnificent, of forms assembled in the light.”
+          <cite>— Le Corbusier, the idea we build around</cite>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact section" id="contact" data-scene="6">
+      <div class="container split">
+        <div class="split__left">
+          <p class="eyebrow reveal">05 — Contact</p>
+          <h2 class="title title--xl reveal">Let's build <em>something</em> timeless.</h2>
+          <div class="contact__info reveal">
+            <a href="mailto:hello@meridianarch.studio" data-hover>hello@meridianarch.studio</a>
+            <span>+1 (212) 555 0148</span>
+            <span>214 Hudson Street, New York, NY</span>
+          </div>
+        </div>
+        <form class="split__right glass contact__form reveal" id="contactForm">
+          <label><span>Name</span><input type="text" name="name" required placeholder="Your full name" /></label>
+          <label><span>Email</span><input type="email" name="email" required placeholder="you@company.com" /></label>
+          <label><span>Project type</span>
+            <select name="type">
+              <option>Residential</option>
+              <option>Commercial / Mixed-use</option>
+              <option>Cultural / Civic</option>
+              <option>Interiors</option>
+              <option>Urban planning</option>
+            </select>
+          </label>
+          <label><span>Tell us about it</span><textarea name="message" rows="4" placeholder="Site, scale, timeline, dreams…"></textarea></label>
+          <button type="submit" class="btn btn--solid magnetic" data-hover><span>Send enquiry</span></button>
+          <p class="form__note" id="formNote" role="status"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__big">Meridian<em>Arch Studio</em></span>
+      <div class="footer__links">
+        <a href="#" data-hover>Instagram</a><a href="#" data-hover>LinkedIn</a><a href="#" data-hover>Behance</a>
+      </div>
+      <span class="footer__copy">© <span id="year"></span> Meridian Arch Studio. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.min.js" } }
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
