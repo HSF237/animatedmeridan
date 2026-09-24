@@ -4,7 +4,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { buildVilla } from "./villa.js?v=3";
+import { buildVilla } from "./villa.js?v=4";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isMobile = window.matchMedia("(max-width: 760px)").matches;
@@ -25,6 +25,10 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
+// The villa is static, so shadow maps are rendered once and reused
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x0a0c12, 0.011);
@@ -81,7 +85,8 @@ const moonLight = new THREE.DirectionalLight(0x9fb4d8, 0.55);
 moonLight.position.set(-30, 40, 30);
 scene.add(moonLight);
 
-const villa = buildVilla(scene, { nightEnv });
+const villa = buildVilla(scene, { nightEnv, lite: isMobile });
+renderer.shadowMap.needsUpdate = true;
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 1500);
 
@@ -197,7 +202,31 @@ function tick() {
   }
 
   composer.render();
+  adaptQuality(dt);
   requestAnimationFrame(tick);
+}
+
+// Adaptive resolution: drop the pixel ratio on slower devices, restore it when there's headroom
+const maxRatio = Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2);
+let ratio = maxRatio;
+let frameAcc = 0;
+let frameCount = 0;
+function adaptQuality(dt) {
+  if (!started) return;
+  frameAcc += dt;
+  frameCount++;
+  if (frameAcc < 1.5) return;
+  const avg = frameAcc / frameCount;
+  frameAcc = frameCount = 0;
+  let next = ratio;
+  if (avg > 1 / 40) next = Math.max(0.6, ratio - 0.25);
+  else if (avg < 1 / 58) next = Math.min(maxRatio, ratio + 0.25);
+  if (next !== ratio) {
+    ratio = next;
+    renderer.setPixelRatio(ratio);
+    composer.setPixelRatio(ratio);
+    composer.setSize(window.innerWidth, window.innerHeight);
+  }
 }
 
 function onResize() {
