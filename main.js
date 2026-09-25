@@ -3,8 +3,9 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { buildVilla } from "./villa.js?v=7";
+import { buildVilla } from "./villa.js?v=8";
 
+const SNAP = new URLSearchParams(location.search).has("snap"); // exact camera for automated screenshots
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isMobile = window.matchMedia("(max-width: 760px)").matches;
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -163,25 +164,45 @@ composer.addPass(new OutputPass());
 
 /* =========================================================
    ONE CONTINUOUS WALK — keyframes in "section units"
-   0 hero · 1 studio · 2 projects · 3 services · 4 process · 5 quote · 6 contact · 7 end
+   0 hero · 1 studio · 2 projects · 3 services · 4 process · 5 residence · 6 quote · 7 contact · 8 end
    ========================================================= */
 const K = [
   { t: 0.0, pos: [-14, 1.4, 31], look: [0, 3.2, -2], room: "Arrival" },
   { t: 0.7, pos: [-4, 0.9, 15], look: [0, 3.0, -2], room: "Arrival" },
   { t: 1.2, pos: [0, 0.75, 8.2], look: [0, 2.4, -2], room: "Entrance" },
   { t: 1.6, pos: [0, 1.7, 2.4], look: [0, 2.6, -5], room: "Entrance Hall" },
-  { t: 2.0, pos: [0, 1.7, -2.2], look: [0, 4.4, -9], room: "Entrance Hall" },
-  { t: 2.5, pos: [-0.3, 1.7, -4.4], look: [0.8, 2.1, -14], room: "Grand Living" },
+  { t: 2.0, pos: [0.4, 1.7, -2.4], look: [0, 4.6, -9], room: "Entrance Hall" },
+  { t: 2.5, pos: [-0.3, 1.7, -4.8], look: [0.8, 2.1, -14], room: "Grand Living" },
   { t: 3.0, pos: [1.6, 1.5, -5.9], look: [6.6, 1.7, -8.6], room: "Grand Living" },
-  { t: 3.4, pos: [-4.2, 1.7, -3.6], look: [-12, 1.5, -6], room: "Kitchen" },
-  { t: 3.8, pos: [-8.6, 1.7, -3.9], look: [-19.6, 1.4, -6.6], room: "Kitchen" },
+  { t: 3.4, pos: [-4.0, 1.7, -5.8], look: [-12, 1.5, -6], room: "Kitchen" },
+  { t: 3.8, pos: [-8.8, 1.7, -4.6], look: [-19.6, 1.4, -6.6], room: "Kitchen" },
   { t: 4.2, pos: [-10.2, 1.7, -8.7], look: [-15, 1.1, -14], room: "Dining" },
-  { t: 4.65, pos: [-2.2, 1.7, -3.1], look: [7, 1.7, -2], room: "Gallery" },
-  { t: 5.0, pos: [8.6, 1.7, -2.1], look: [12, 1.6, -6], room: "Master Suite" },
-  { t: 5.4, pos: [15.6, 1.65, -2.9], look: [11, 1.3, -14], room: "Master Suite" },
-  { t: 5.9, pos: [14.8, 1.7, -11.2], look: [12.5, 1.4, -24], room: "Master Suite" },
-  { t: 6.4, pos: [13.2, 1.8, -20.2], look: [-6, 0.6, -22.5], room: "Infinity Pool" },
-  { t: 7.0, pos: [3.5, 2.6, -15.4], look: [12, 0.4, -60], room: "Sunset Terrace" },
+  { t: 4.5, pos: [-8.7, 1.7, -9.7], look: [-5.4, 1.9, -9.7], room: "Wine Vault" },
+  { t: 4.75, pos: [-7.8, 1.7, -6.4], look: [-4.8, 2.0, -3.4], room: "Wine Vault" },
+  { t: 5.0, pos: [-4.7, 1.8, -5.2], look: [-5.6, 3.0, -2.5], room: "Grand Stair" },
+  { t: 5.12, pos: [-5.6, 1.95, -3.3], look: [-2.4, 3.6, -1.6], room: "Grand Stair" },
+  { t: 5.24, pos: [-4.8, 2.95, -2.5], look: [0, 4.8, -2.4], room: "Grand Stair" },
+  { t: 5.36, pos: [-5.6, 3.99, -1.7], look: [-0.5, 5.3, -4.4], room: "Grand Stair" },
+  { t: 5.48, pos: [-6.4, 5.03, -2.5], look: [-2.2, 5.3, -6.4], room: "Grand Stair" },
+  { t: 5.58, pos: [-5.6, 5.86, -3.4], look: [-2.6, 5.6, -4.8], room: "Gallery" },
+  { t: 5.68, pos: [-5.5, 5.86, -5.6], look: [-5.6, 5.6, -13], room: "Gallery" },
+  { t: 5.78, pos: [-6.2, 5.87, -8.8], look: [-12, 5.6, -8.8], room: "Library" },
+  { t: 5.88, pos: [-10.6, 5.87, -8.8], look: [-19.5, 5.4, -8], room: "Library" },
+  { t: 6.0, pos: [-12.2, 5.9, -3.2], look: [-13.6, 5.0, -13], room: "Library" },
+  { t: 6.12, pos: [-7.4, 5.86, -7.2], look: [-2, 5.6, -4.75], room: "Gallery" },
+  { t: 6.24, pos: [-4.4, 5.86, -4.75], look: [6, 5.4, -4.75], room: "Glass Bridge" },
+  { t: 6.36, pos: [1.4, 5.86, -4.75], look: [7, 5.3, -6.5], room: "Glass Bridge" },
+  { t: 6.5, pos: [8.6, 5.67, -4.75], look: [14.5, 4.6, -9], room: "Spa" },
+  { t: 6.64, pos: [11.0, 5.67, -3.2], look: [15.5, 4.3, -9.8], room: "Spa" },
+  { t: 6.78, pos: [13.4, 5.67, -6.2], look: [19.4, 5.1, -3.8], room: "Spa" },
+  { t: 6.92, pos: [13.9, 5.67, -12.4], look: [12, 4.4, -26], room: "Spa" },
+  { t: 7.04, pos: [13.9, 5.9, -17.2], look: [4, 2.8, -40], room: "Spa Terrace" },
+  { t: 7.16, pos: [13.0, 3.3, -20.4], look: [-2, 0.8, -24], room: "Infinity Pool" },
+  { t: 7.3, pos: [12.4, 1.8, -21.0], look: [-6, 0.6, -22.5], room: "Infinity Pool" },
+  { t: 7.46, pos: [11.2, 1.7, -17.0], look: [11.0, 1.5, -9], room: "Master Suite" },
+  { t: 7.6, pos: [12.6, 1.75, -12.8], look: [8.6, 1.0, -7.6], room: "Master Suite" },
+  { t: 7.78, pos: [13.8, 1.7, -8.5], look: [7.7, 1.6, -8], room: "Master Suite" },
+  { t: 8.0, pos: [12.2, 1.75, -5.6], look: [13, 1.4, -30], room: "Master Suite" },
 ];
 const posCurve = new THREE.CatmullRomCurve3(K.map((k) => new THREE.Vector3(...k.pos)), false, "centripetal");
 const lookCurve = new THREE.CatmullRomCurve3(K.map((k) => new THREE.Vector3(...k.look)), false, "centripetal");
@@ -190,17 +211,23 @@ const lookCurve = new THREE.CatmullRomCurve3(K.map((k) => new THREE.Vector3(...k
 const ANNOS = [
   { at: [0, 5.5, -0.5], t: [0.1, 1.3], label: "Bronze-framed glazing", detail: "7.6 m entrance façade" },
   { at: [-5.7, 4.5, 0.1], t: [0.1, 1.3], label: "Split-face limestone", detail: "Hand-dressed cladding" },
-  { at: [0, 5.2, -3], t: [1.7, 2.3], label: "Crystal cascade chandelier", detail: "Hand-blown glass, brass" },
+  { at: [0, 5.2, -2.2], t: [1.7, 2.3], label: "Crystal cascade chandelier", detail: "Hand-blown glass, brass" },
   { at: [0.5, 3.4, -14], t: [2.25, 2.8], label: "Double-height glazing", detail: "Uninterrupted sea view" },
   { at: [6.5, 0.7, -8], t: [2.75, 3.2], label: "Linear fireplace", detail: "Book-matched marble hearth" },
   { at: [-0.7, 0.42, -9.2], t: [2.35, 2.95], label: "Emperador coffee table", detail: "Polished marble" },
   { at: [-13.5, 0.97, -5.4], t: [3.6, 4.05], label: "Quartzite waterfall island", detail: "Single slab, 5 m" },
   { at: [-13.5, 2.3, -5.9], t: [3.6, 4.05], label: "Blown-glass pendants", detail: "Brass & amber filament" },
-  { at: [-14.8, 0.8, -11.5], t: [4.05, 4.45], label: "Dining for ten", detail: "Walnut & bouclé" },
-  { at: [7.7, 2.4, -7.5], t: [5.2, 5.75], label: "Stone feature wall", detail: "Backlit relief" },
-  { at: [14, 2, -14], t: [5.2, 5.9], label: "Panoramic sliders", detail: "Open onto the terrace" },
-  { at: [9.2, -0.6, -22.5], t: [6.2, 6.85], label: "Infinity edge", detail: "Cascading water wall" },
-  { at: [15.2, 0.5, -17], t: [6.25, 6.9], label: "Fire lounge", detail: "Under the cantilever" },
+  { at: [-14.8, 0.8, -11.5], t: [4.05, 4.4], label: "Dining for ten", detail: "Walnut & bouclé" },
+  { at: [-5.9, 2.2, -9.7], t: [4.4, 4.7], label: "Glass wine vault", detail: "Backlit bronze racks" },
+  { at: [-5.6, 2.6, -2.5], t: [4.85, 5.1], label: "Sculptural spiral stair", detail: "Walnut treads, brass core" },
+  { at: [-5.7, 5.6, -12.8], t: [5.62, 5.74], label: "Gallery", detail: "Bronze sculpture & relief art" },
+  { at: [-19.3, 5.8, -8], t: [5.8, 5.96], label: "Walnut library", detail: "Rolling brass ladder" },
+  { at: [1, 4.2, -4.75], t: [6.2, 6.32], label: "Glass bridge", detail: "Above the double-height hall" },
+  { at: [14.5, 4.4, -8.75], t: [6.46, 6.7], label: "Heated plunge pool", detail: "Mosaic & cream marble" },
+  { at: [17.4, 5.3, -4.0], t: [6.7, 6.86], label: "Cedar sauna", detail: "Glass front, hot stones" },
+  { at: [9.2, -0.6, -22.5], t: [7.18, 7.38], label: "Infinity edge", detail: "Cascading water wall" },
+  { at: [15.2, 0.5, -16.4], t: [7.2, 7.42], label: "Fire lounge", detail: "Under the cantilever" },
+  { at: [7.7, 2.4, -7.5], t: [7.62, 7.9], label: "Stone feature wall", detail: "Backlit relief" },
 ];
 
 const sections = [...document.querySelectorAll("[data-scene]")];
@@ -258,7 +285,7 @@ function tick() {
   const dt = Math.min(clock.getDelta(), 0.05);
   const t = clock.elapsedTime;
   const target = sceneTime();
-  tSmooth = lerp(tSmooth, target, 1 - Math.pow(0.0005, dt * (reducedMotion ? 6 : 1)));
+  tSmooth = SNAP ? target : lerp(tSmooth, target, 1 - Math.pow(0.0005, dt * (reducedMotion ? 6 : 1)));
   const { u, room } = curveU(tSmooth);
   posCurve.getPoint(u, camPos);
   lookCurve.getPoint(u, camLook);

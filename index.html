@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=8" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 28 16 4l12 24' fill='none' stroke='%23d9a45b' stroke-width='3'/%3E%3C/svg%3E" />
 </head>
 <body>
@@ -45,6 +45,7 @@
       <a href="#projects" data-hover>Projects</a>
       <a href="#services" data-hover>Services</a>
       <a href="#process" data-hover>Process</a>
+      <a href="#residence" data-hover>Residence</a>
       <a href="#contact" class="nav__cta" data-hover>Start a project</a>
     </nav>
     <button class="nav__burger" id="burger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span></button>
@@ -257,7 +258,25 @@
     </section>
 
     <!-- QUOTE -->
-    <section class="quote section" data-scene="5">
+    <!-- RESIDENCE -->
+    <section class="residence section" id="residence" data-scene="5">
+      <div class="container">
+        <div class="section-head">
+          <p class="eyebrow reveal">05 — The Residence</p>
+          <h2 class="title reveal">Every room, <em>a destination.</em></h2>
+        </div>
+        <div class="room-list">
+          <div class="room-item reveal"><span>01</span><h4>Glass Wine Vault</h4><p>Backlit bronze racks for 370 bottles, sealed in glass between kitchen and living.</p></div>
+          <div class="room-item reveal"><span>02</span><h4>Sculptural Stair</h4><p>A single turn of floating walnut treads around a polished brass core.</p></div>
+          <div class="room-item reveal"><span>03</span><h4>Gallery</h4><p>A lit mezzanine for art and sculpture, overlooking the double-height hall.</p></div>
+          <div class="room-item reveal"><span>04</span><h4>Library</h4><p>Floor-to-ceiling walnut shelving, a rolling brass ladder and a desk facing the sea.</p></div>
+          <div class="room-item reveal"><span>05</span><h4>Glass Bridge</h4><p>Walk above the hall and under the crystal chandelier to the private wing.</p></div>
+          <div class="room-item reveal"><span>06</span><h4>Spa</h4><p>A heated plunge pool, cedar sauna and loungers opening onto the sea terrace.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="quote section" data-scene="6">
       <div class="container">
         <blockquote class="reveal">
           “Architecture is the learned game, correct and magnificent, of forms assembled in the light.”
@@ -267,10 +286,10 @@
     </section>
 
     <!-- CONTACT -->
-    <section class="contact section" id="contact" data-scene="6">
+    <section class="contact section" id="contact" data-scene="7">
       <div class="container split">
         <div class="split__left">
-          <p class="eyebrow reveal">05 — Contact</p>
+          <p class="eyebrow reveal">06 — Contact</p>
           <h2 class="title title--xl reveal">Let's build <em>something</em> timeless.</h2>
           <div class="contact__info reveal">
             <a href="mailto:hello@meridianarch.studio" data-hover>hello@meridianarch.studio</a>
@@ -311,6 +330,6 @@
   <script type="importmap">
     { "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }
   </script>
-  <script type="module" src="main.js?v=7"></script>
+  <script type="module" src="main.js?v=8"></script>
 </body>
 </html>

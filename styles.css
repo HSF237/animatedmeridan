@@ -261,6 +261,20 @@ body.ready .hero__title .line:nth-child(4) .word { transition-delay: 0.3s; }
 }
 .quote cite { display: block; margin-top: 2rem; font-family: var(--sans); font-style: normal; font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
 
+/* ---------- Residence ---------- */
+.residence { min-height: 320vh !important; }
+.room-list {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; max-width: 580px;
+  background: var(--line); border: 1px solid var(--line); border-radius: 20px; overflow: hidden;
+  position: sticky; top: 18vh;
+}
+.room-item { background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 1.4rem 1.5rem; }
+.room-item span { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--accent); }
+.room-item h4 { font-family: var(--serif); font-weight: 300; font-size: 1.35rem; margin: 0.3rem 0 0.4rem; }
+.room-item p { color: var(--muted); font-size: 0.85rem; }
+.quote { min-height: 160vh; }
+@media (max-width: 760px) { .room-list { grid-template-columns: 1fr; } }
+
 /* ---------- Contact ---------- */
 .contact__info { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 2.5rem; color: var(--muted); }
 .contact__info a { color: var(--ink); font-size: 1.2rem; border-bottom: 1px solid var(--line); width: fit-content; transition: border-color 0.3s, color 0.3s; }

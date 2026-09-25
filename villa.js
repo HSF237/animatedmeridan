@@ -914,19 +914,30 @@ export function buildVilla(scene, { env, lite = false, sunDir }) {
   curtain("z", -13.8, 5.6, 6.8, 0.02, H - 0.1, 8);
 
   // Mezzanine gallery on the left with glass balustrade (dining sits beneath in the kitchen wing)
-  R(M.render, -7, -4, 3.8, 4.15, -13.8, -1);
-  R(M.floor, -7, -4, 4.15, 4.16, -13.8, -1);
-  R(M.glass, -4.02, -3.98, 4.16, 5.2, -13.8, -1);
-  R(M.brass, -4.03, -3.97, 5.18, 5.22, -13.8, -1);
-  R(M.ledSoft, -4.02, -3.99, 3.78, 3.8, -13.8, -1);
-  downlights(-6.6, -4.2, -13.4, -1.5, 3.8, 1.8);
+  R(M.render, -7, -4, 3.8, 4.15, -13.8, -4);
+  R(M.floor, -7, -4, 4.15, 4.16, -13.8, -4);
+  R(M.glass, -4.02, -3.98, 4.16, 5.2, -13.8, -5.3);
+  R(M.brass, -4.03, -3.97, 5.18, 5.22, -13.8, -5.3);
+  R(M.glass, -7, -6.4, 4.16, 5.2, -4.02, -3.98);
+  R(M.brass, -7, -6.4, 5.18, 5.22, -4.03, -3.97);
+  R(M.glass, -4.8, -4, 4.16, 5.2, -4.02, -3.98);
+  R(M.brass, -4.8, -4, 5.18, 5.22, -4.03, -3.97);
+  R(M.ledSoft, -4.02, -3.99, 3.78, 3.8, -13.8, -4);
+  R(M.ledSoft, -7, -4, 3.78, 3.8, -4.02, -3.99);
+  downlights(-6.6, -4.2, -13.4, -4.4, 3.8, 1.8);
   // Left wall at x = -7: stone with a wide opening into the kitchen wing
   R(M.stone, -7.4, -7, 0, 3.8, -1, -3, { tile: 1.6 });
   R(M.stone, -7.4, -7, 0, 3.8, -11.4, -14, { tile: 1.6 });
-  R(M.stone, -7.4, -7, 3.8, H, -14, -1, { tile: 1.6 });
+  R(M.stone, -7.4, -7, 3.8, H, -14, -9.8, { tile: 1.6 });
+  R(M.stone, -7.4, -7, 3.8, H, -7.8, -1, { tile: 1.6 });
+  R(M.stone, -7.4, -7, 3.8, 4.16, -9.8, -7.8, { tile: 1.6 });
+  R(M.stone, -7.4, -7, 6.6, H, -9.8, -7.8, { tile: 1.6 });
 
   // Right wall x = 7: split-face stone feature wall with TV, linear fireplace, lit shelving
-  R(M.stone, 6.6, 7.4, 0, H, -14, -2.8, { tile: 1.6 });
+  R(M.stone, 6.6, 7.4, 0, H, -14, -5.3, { tile: 1.6 });
+  R(M.stone, 6.6, 7.4, 0, 4.16, -5.3, -4.2, { tile: 1.6 });
+  R(M.stone, 6.6, 7.4, 6.6, H, -5.3, -4.2, { tile: 1.6 });
+  R(M.stone, 6.6, 7.4, 0, H, -4.2, -2.8, { tile: 1.6 });
   R(M.stone, 6.6, 7.4, 2.9, H, -2.8, -0.9, { tile: 1.6 }); // over the corridor door
   R(M.emperador, 5.7, 6.6, 0, 0.42, -12.2, -3.8, { tile: 1.6 }); // hearth
   R(M.black, 6.45, 6.6, 0.5, 0.95, -11.6, -4.4);
@@ -942,7 +953,7 @@ export function buildVilla(scene, { env, lite = false, sunDir }) {
   R(M.black, 6.5, 6.6, 1.55, 4.15, -10.8, -5.2); // TV body
   R(M.screen, 6.49, 6.5, 1.6, 4.1, -10.75, -5.25);
   // Shelving niches either side of the TV
-  for (const zc of [-12.8, -3.9]) {
+  for (const zc of [-12.8, -3.3]) {
     R(M.walnutH, 6.3, 6.6, 0.5, 6.4, zc - 0.7, zc + 0.7);
     for (let s = 0; s < 5; s++) {
       const y = 1.2 + s * 1.1;
@@ -996,10 +1007,9 @@ export function buildVilla(scene, { env, lite = false, sunDir }) {
   pot(-6.2, 0, -12.9, 0.4, 0.7, M.ceramic);
   leafCluster(-6.2, 1.3, -12.9, 0.5, 160, 0x607552, 0.07);
   // Chandeliers: entrance hall and living
-  crystalChandelier(0, H - 0.02, -3, 1.0);
+  crystalChandelier(0, H - 0.02, -2.2, 1.0);
   crystalChandelier(-0.7, H - 0.02, -9.2, 1.15);
   // Floor vases in the hall
-  vase(-5.8, 0, -1.6, 2.4, M.stonePot, true);
   vase(5.8, 0, -1.6, 2.4, M.stonePot, true);
 
   /* =========================================================
@@ -1113,7 +1123,10 @@ export function buildVilla(scene, { env, lite = false, sunDir }) {
   R(M.ledSoft, 8.6, 18.8, HE - 0.36, HE - 0.35, -2.65, -2.6);
   downlights(8, 19.5, -13.5, -1.5, HE - 0.02, 2.4);
   // Suite glass: sea side sliders + corner glass on the east side
-  glazing("z", -14, 7.4, 20, 0, HE, 5, []);
+  glazing("z", -14, 7.4, 9.92, 0, HE, 1, []);
+  glazing("z", -14, 12.44, 20, 0, HE, 3, []);
+  R(M.glass, 12.44, 14.96, 0, HE, -14.12, -14.09); // slider pushed aside
+  R(M.bronze, 9.92, 12.44, 0, 0.04, -14.05, -13.95); // threshold
   glazing("x", 20.2, -14, -8, 0, HE, 3, []);
   curtain("z", -13.8, 7.5, 8.6, 0.02, HE - 0.1, 5);
   curtain("x", 19.9, -8.4, -7.2, 0.02, HE - 0.1, 5);
@@ -1155,8 +1168,8 @@ export function buildVilla(scene, { env, lite = false, sunDir }) {
   barrelChair(13.4, -11.4, -0.7);
   lathe(M.bronze, [[0, 0], [0.18, 0], [0.18, 0.02], [0.03, 0.03], [0.03, 0.52], [0.2, 0.53], [0.2, 0.56], [0, 0.56]], 14.2, 0, -12.2, 32);
   vase(14.2, 0.56, -12.2, 0.4, M.ceramic, true);
-  pot(11.6, 0, -12.8, 0.45, 0.8);
-  olive(11.6, 0.75, -12.8, 0.75);
+  pot(8.9, 0, -12.9, 0.45, 0.8);
+  olive(8.9, 0.75, -12.9, 0.75);
   RB(M.walnutH, 19.2, 19.8, 0, 0.8, -6.8, -3.2, 0.02);
   R(M.creamMarble, 19.15, 19.85, 0.8, 0.84, -6.85, -3.15);
   vase(19.5, 0.84, -4, 1.0, M.bronze, true);
@@ -1181,15 +1194,36 @@ export function buildVilla(scene, { env, lite = false, sunDir }) {
     R(M.deck, x0 + 0.1, x1 - 0.1, y0 + 0.35, y0 + 0.37, -17.5, -14);
     R(M.glass, x0 + 0.1, x1 - 0.1, y0 + 0.37, y0 + 1.45, -17.56, -17.52);
     R(M.brass, x0 + 0.1, x1 - 0.1, y0 + 1.43, y0 + 1.46, -17.57, -17.51).visible = false;
-    // lit rooms behind glass
-    R(M.roomGlow, x0 + 0.5, x1 - 0.5, y0 + 0.37, y1, -12.5, -12.4, {});
-    glazing("z", -14, x0 + 0.3, x1 - 0.3, y0 + 0.37, y1, 5, []);
-    R(M.roomGlow, x0 + 0.5, x1 - 0.5, y0 + 0.37, y1, -2.2, -2.1, {});
-    glazing("z", -0.8, x0 + 1.2, x1 - 1.2, y0 + 0.37, y1, 4, []);
+    const east = x0 > 0;
+    const fy = y0 + 0.37; // upper floor level
+    if (east) {
+      glazing("z", -14, x0 + 0.3, 12.66, fy, y1, 2, []);
+      glazing("z", -14, 15.14, x1 - 0.3, fy, y1, 2, []);
+      R(M.glass, 15.14, 17.62, fy, y1, -14.12, -14.09);
+    } else glazing("z", -14, x0 + 0.3, x1 - 0.3, fy, y1, 5, []);
+    glazing("z", -0.8, x0 + 1.2, x1 - 1.2, fy, y1, 4, []);
+    R(M.plaster, x0 + 0.4, x1 - 0.4, y1 - 0.02, y1, -14, -0.8);
+    cove(x0 + 0.5, x1 - 0.5, y1 - 0.02, -13.9, -0.9);
+    downlights(x0 + 0.6, x1 - 0.6, -13.6, -1.2, y1 - 0.02, 2.4);
+    curtain("z", -13.8, x0 + 0.5, x0 + 1.6, fy, y1 - 0.1, 6);
+    curtain("z", -13.8, x1 - 1.6, x1 - 0.5, fy, y1 - 0.1, 6);
     R(M.stone, x0, x0 + 1.2, y0 + 0.35, y1, -1, -0.6, { tile: 1.6 });
     R(M.stone, x1 - 1.2, x1, y0 + 0.35, y1, -1, -0.6, { tile: 1.6 });
-    R(M.stone, x0 - 0.01, x0 + 0.4, 0, y1, -14, -1, { tile: 1.6 });
-    R(M.stone, x1 - 0.4, x1 + 0.01, y0, y1, -14, -1, { tile: 1.6 });
+    if (east) {
+      // inner wall: corridor door below, bridge opening above
+      R(M.stone, x0 - 0.01, x0 + 0.4, 0, y1, -14, -5.3, { tile: 1.6 });
+      R(M.stone, x0 - 0.01, x0 + 0.4, 0, fy, -5.3, -4.2, { tile: 1.6 });
+      R(M.stone, x0 - 0.01, x0 + 0.4, 6.6, y1, -5.3, -4.2, { tile: 1.6 });
+      R(M.stone, x0 - 0.01, x0 + 0.4, 0, y1, -4.2, -2.8, { tile: 1.6 });
+      R(M.stone, x0 - 0.01, x0 + 0.4, 2.9, y1, -2.8, -1, { tile: 1.6 });
+      R(M.stone, x1 - 0.4, x1 + 0.01, y0, y1, -14, -1, { tile: 1.6 });
+    } else {
+      R(M.stone, x0 - 0.01, x0 + 0.4, 0, y1, -14, -1, { tile: 1.6 });
+      R(M.stone, x1 - 0.4, x1 + 0.01, y0, y1, -14, -9.8, { tile: 1.6 });
+      R(M.stone, x1 - 0.4, x1 + 0.01, y0, y1, -7.8, -1, { tile: 1.6 });
+      R(M.stone, x1 - 0.4, x1 + 0.01, y0, fy, -9.8, -7.8, { tile: 1.6 });
+      R(M.stone, x1 - 0.4, x1 + 0.01, 6.6, y1, -9.8, -7.8, { tile: 1.6 });
+    }
     R(M.plaster, x0 + 0.3, x1 - 0.3, y0 + 0.37, y1, -12.6, -12.5).visible = false;
     roof(x0 - 0.3, x1 + 0.3, y1, -18.2, 0.4);
     // balcony furniture
@@ -1251,11 +1285,10 @@ export function buildVilla(scene, { env, lite = false, sunDir }) {
   vase(-9.8, 0.45, -15.1, 0.6, M.ceramic, true);
   // Outdoor lounge with fire table under the east cantilever
   {
-    const g = grp(15.5, 0, -15.3, 0);
+    const g = grp(15.5, 0, -15.3, Math.PI);
     R(M.teak, -2.4, 2.4, 0, 0.12, -0.5, 0.5, { parent: g });
     sectionalRun(g, -2.3, 2.3, 1.0, M.linen, true, true, true);
     for (const [x, m] of [[-1.6, M.mocha], [-0.6, M.taupe], [0.5, M.mocha], [1.5, M.taupe]]) pillow(g, x, 0.56, -0.26, 0.48, m, rr(-0.1, 0.1));
-    RB(M.linen, 0.9, 2.3, 0.06, 0.52, 0.5, 2.1, 0.1, g); // return
   }
   RB(M.stone, 13.4, 16.4, 0, 0.42, -17.6, -16.4, 0.03);
   R(M.black, 13.8, 16.0, 0.42, 0.43, -17.2, -16.8);
@@ -1286,6 +1319,271 @@ export function buildVilla(scene, { env, lite = false, sunDir }) {
   agave(17, 0.5, -27.1, 0.9);
   shrubs(-21.8, -14.8, -27.8, -26.5, 0.5, 18, 0x56663f, 0.3);
 
+  /* =========================================================
+     WINE VAULT — glass room under the gallery, between living and kitchen
+     x -6.95..-4.8, z -11.3..-8.2
+     ========================================================= */
+  {
+    const x0 = -6.95, x1 = -4.8, z0 = -11.3, z1 = -8.2, top = 3.78;
+    R(M.emperador, x0, x1, 0, 0.02, z0, z1, { tile: 1.6 });
+    glazing("x", x0, z0, z1, 0.02, top, 3, []);
+    glazing("x", x1, z0, z1, 0.02, top, 3, []);
+    R(M.walnut, x0, x1, 0, top, z0 - 0.12, z0, { tile: 2 });
+    R(M.walnut, x0, x1, 0, top, z1, z1 + 0.12, { tile: 2 });
+    R(M.led, x0 + 0.1, x1 - 0.1, top - 0.03, top, z0 + 0.1, z0 + 0.14);
+    R(M.led, x0 + 0.1, x1 - 0.1, top - 0.03, top, z1 - 0.14, z1 - 0.1);
+    // double-sided bronze rack spine, backlit
+    const sx0 = -6.05, sx1 = -5.75, rz0 = -11.0, rz1 = -8.5;
+    R(M.ledSoft, sx0 + 0.13, sx1 - 0.13, 0.1, 3.6, rz0, rz1);
+    for (let y = 0.1; y <= 3.61; y += 0.2) R(M.bronze, sx0, sx1, y - 0.01, y + 0.01, rz0, rz1);
+    for (let z = rz0; z <= rz1 + 0.01; z += 0.5) R(M.bronze, sx0, sx1, 0.1, 3.6, z - 0.015, z + 0.015);
+    const bottleGeo = new THREE.LatheGeometry(
+      [[0, 0], [0.036, 0], [0.036, 0.2], [0.028, 0.24], [0.012, 0.28], [0.012, 0.32], [0, 0.32]].map(([a, b]) => new THREE.Vector2(a, b)),
+      10
+    );
+    bottleGeo.rotateZ(-Math.PI / 2);
+    const bottleMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.12, clearcoat: 1, envMapIntensity: 1 });
+    const rows = 17, cols = 11;
+    const bottles = new THREE.InstancedMesh(bottleGeo, bottleMat, rows * cols * 2);
+    let n = 0;
+    for (const side of [-1, 1]) {
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++) {
+          const x = side < 0 ? sx0 + 0.02 : sx1 - 0.02;
+          q.setFromEuler(eul.set(0, side < 0 ? 0 : Math.PI, 0));
+          mtx.compose(v3.set(x, 0.2 + r * 0.2, rz0 + 0.12 + c * 0.22), q, s3.set(1, 1, 1));
+          bottles.setMatrixAt(n, mtx);
+          bottles.setColorAt(n++, col.set(rnd() < 0.5 ? 0x3a0e16 : rnd() < 0.6 ? 0x1c2c18 : 0x4a3312));
+        }
+    }
+    root.add(bottles);
+    // tasting ledge
+    RB(M.emperador, -4.95, -4.82, 1.0, 1.05, -11.0, -8.5, 0.01).visible = false;
+  }
+
+  /* =========================================================
+     SCULPTURAL SPIRAL STAIR — hall front-left, up to the gallery
+     ========================================================= */
+  const STAIR = { cx: -5.6, cz: -2.5, r: 1.35, n: 22, top: 4.16 };
+  {
+    const { cx, cz, r, n, top } = STAIR;
+    cyl(M.brass, 0.1, 0.1, top + 1.1, cx, 0, cz, 32);
+    const rise = top / n;
+    const rail = [];
+    for (let i = 0; i < n; i++) {
+      const th = -Math.PI / 2 + ((i + 0.5) / n) * Math.PI * 2;
+      const y = (i + 1) * rise;
+      const g = grp(cx + Math.cos(th) * 0.74, y - 0.03, cz + Math.sin(th) * 0.74, -th);
+      RB(M.walnutH, -0.64, 0.64, -0.035, 0.035, -0.2, 0.2, 0.012, g);
+      R(M.led, 0.5, 0.62, -0.04, -0.035, -0.18, 0.18, { parent: g });
+      // brass baluster at the outer edge
+      R(M.brass, 0.6, 0.62, 0.035, 0.98, -0.01, 0.01, { parent: g });
+    }
+    for (let k = 0; k <= 96; k++) {
+      const f = k / 96;
+      const th = -Math.PI / 2 + f * Math.PI * 2;
+      rail.push([cx + Math.cos(th) * (r - 0.03), f * top + 0.95 + rise * 0.5, cz + Math.sin(th) * (r - 0.03)]);
+    }
+    tube(M.brass, rail, 0.022, root, 200, 8);
+  }
+
+  /* =========================================================
+     GALLERY — art and sculpture along the mezzanine
+     ========================================================= */
+  {
+    const fy = 4.16;
+    R(M.art, -6.98, -6.95, fy + 0.8, fy + 2.4, -12.9, -10.7);
+    R(M.art, -6.98, -6.95, fy + 0.9, fy + 2.2, -6.9, -5.2);
+    R(M.brass, -6.99, -6.94, fy + 2.52, fy + 2.56, -12.6, -11.0);
+    R(M.led, -6.95, -6.9, fy + 2.5, fy + 2.52, -12.6, -11.0);
+    RB(M.creamMarble, -6.2, -5.2, fy, fy + 1.0, -13.3, -12.3, 0.02);
+    const sc = new THREE.Mesh(new THREE.TorusKnotGeometry(0.28, 0.08, 220, 24, 2, 5), M.bronze);
+    sc.position.set(-5.7, fy + 1.45, -12.8);
+    root.add(sc);
+    animated.push((t) => (sc.rotation.y = t * 0.2));
+    boucleBench(-6.3, -5.1, fy, -9.4, -8.2);
+    RB(M.rug, -6.8, -4.3, fy, fy + 0.02, -13.5, -4.4, 0.01);
+  }
+
+  /* =========================================================
+     GLASS BRIDGE — across the double-height hall to the spa wing
+     ========================================================= */
+  {
+    const y = 4.16, z0 = -5.3, z1 = -4.2;
+    R(M.render, -4, 7.8, y - 0.2, y - 0.02, z0, z1);
+    R(M.floor, -4, 7.8, y - 0.02, y, z0, z1, { tile: 1.2 });
+    R(M.led, -4, 6.6, y - 0.22, y - 0.2, z0, z0 + 0.03);
+    R(M.led, -4, 6.6, y - 0.22, y - 0.2, z1 - 0.03, z1);
+    for (const z of [z0 + 0.02, z1 - 0.02]) {
+      R(M.glass, -4, 6.6, y, y + 1.05, z - 0.015, z + 0.015);
+      R(M.brass, -4, 6.6, y + 1.03, y + 1.07, z - 0.025, z + 0.025);
+    }
+  }
+
+  /* =========================================================
+     LIBRARY — west upper floor
+     ========================================================= */
+  {
+    const fy = HW + 0.37;
+    R(M.floor, -7.8, -7, fy - 0.02, fy, -9.8, -7.8); // threshold from the gallery
+    R(M.walnut, -20, -19.45, fy, 7.18, -12.8, -1.8, { tile: 2 });
+    const books = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ roughness: 0.8 }), 900);
+    let bk = 0;
+    for (let sh = 0; sh < 6; sh++) {
+      const y0 = fy + 0.15 + sh * 0.48;
+      R(M.walnutH, -19.5, -19.1, y0 - 0.03, y0, -12.6, -2.0);
+      R(M.led, -19.14, -19.1, y0 + 0.4, y0 + 0.42, -12.6, -2.0);
+      let z = -12.5;
+      while (z < -2.1 && bk < 900) {
+        const w = rr(0.035, 0.075), h = rr(0.26, 0.4);
+        if (rnd() < 0.06) {
+          z += 0.4;
+          continue;
+        }
+        mtx.compose(v3.set(-19.3, y0 + h / 2, z + w / 2), q.identity(), s3.set(0.26, h, w));
+        books.setMatrixAt(bk, mtx);
+        books.setColorAt(bk++, col.setHSL(rr(0.05, 0.1), rr(0.1, 0.35), rr(0.2, 0.7)));
+        z += w + 0.004;
+      }
+    }
+    books.count = bk;
+    root.add(books);
+    // rolling brass ladder leaning on the shelves
+    const mid = (fy + 7.0) / 2;
+    for (const dz of [-0.25, 0.25]) {
+      const railM = R(M.brass, -0.015, 0.015, fy, 7.0, -0.015, 0.015);
+      railM.position.set(-18.75, mid, -6 + dz);
+      railM.rotation.z = 0.17;
+    }
+    for (let i = 0; i < 8; i++) {
+      const yy = fy + 0.3 + i * 0.34;
+      const xr = -18.75 - (yy - mid) * Math.tan(0.17);
+      R(M.brass, xr - 0.015, xr + 0.015, yy, yy + 0.02, -6.25, -5.75);
+    }
+    R(M.brass, -19.08, -19.04, 7.0, 7.03, -12.6, -2.0);
+    // lounge: facing sofas, coffee table, chairs
+    RB(M.rug, -17.2, -9.8, fy, fy + 0.03, -11.2, -4.6, 0.02);
+    const sA = grp(-13.5, fy + 0.03, -10.4, 0);
+    sectionalRun(sA, -1.9, 1.9, 1.05, M.oat, true, true, true);
+    for (const [x, m] of [[-1.2, M.mocha], [-0.2, M.taupe], [0.9, M.mocha]]) pillow(sA, x, 0.56, -0.26, 0.48, m, rr(-0.1, 0.1));
+    const sB = grp(-13.5, fy + 0.03, -5.4, Math.PI);
+    sectionalRun(sB, -1.9, 1.9, 1.05, M.oat, true, true, true);
+    for (const [x, m] of [[-1.0, M.taupe], [0.1, M.mocha], [1.1, M.oat]]) pillow(sB, x, 0.56, -0.26, 0.48, m, rr(-0.1, 0.1));
+    RB(M.knit, 0.9, 1.9, 0.56, 0.6, -0.4, 0.5, 0.02, sB);
+    RB(M.emperador, -14.9, -12.1, fy + 0.03, fy + 0.4, -8.5, -7.3, 0.02);
+    booksStack(-14.2, fy + 0.4, -7.9, 0.4, 4);
+    vase(-12.9, fy + 0.4, -7.8, 0.8, M.ceramic, true);
+    candle(-13.5, fy + 0.4, -8.2, 0.12);
+    candle(-13.2, fy + 0.4, -7.6, 0.16);
+    for (const z of [-9.2, -6.6]) {
+      const c = barrelChair(-17.0, z, Math.PI / 2 + (z < -8 ? 0.3 : -0.3));
+      c.position.y = fy;
+    }
+    // writing desk at the sea glass
+    RB(M.walnutH, -11.6, -9.4, fy + 0.72, fy + 0.77, -13.2, -12.4, 0.01);
+    for (const x of [-11.5, -9.5]) R(M.bronze, x - 0.02, x + 0.02, fy, fy + 0.72, -13.1, -12.5);
+    tableLamp(-9.8, fy + 0.77, -12.9, 1.0, M.bronze);
+    booksStack(-11.0, fy + 0.77, -12.8, 0.1, 2);
+    const dc = barrelChair(-10.5, -11.8, Math.PI);
+    dc.position.y = fy;
+    pot(-8.6, fy, -12.9, 0.45, 0.85);
+    olive(-8.6, fy + 0.8, -12.9, 0.7);
+    pot(-19.0, fy, -13.3, 0.35, 0.7, M.ceramic);
+    leafCluster(-19.0, fy + 1.25, -13.3, 0.5, 160, 0x607552, 0.07);
+    // pendant cluster over the lounge
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      const x = -13.5 + Math.cos(a) * 0.5, z = -7.9 + Math.sin(a) * 0.5, y = 6.0 + (i % 2) * 0.3;
+      R(M.black, x - 0.004, x + 0.004, y, 7.18, z - 0.004, z + 0.004);
+      const gl = new THREE.Mesh(new THREE.SphereGeometry(0.14, 24, 16), M.pendantGlass);
+      gl.position.set(x, y - 0.12, z);
+      root.add(gl);
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), M.bulb);
+      b.position.set(x, y - 0.12, z);
+      root.add(b);
+    }
+  }
+
+  /* =========================================================
+     SPA — east upper floor: plunge pool, cedar sauna, loungers
+     ========================================================= */
+  {
+    const fy = HE + 0.37;
+    R(M.deck, 7.8, 20, fy, fy + 0.005, -13.9, -1, { tile: 1.6 });
+    // raised stone plunge pool with mosaic lining
+    const px0 = 12, px1 = 17, pz0 = -11, pz1 = -6.5, ph = 0.55;
+    R(M.mosaic, px0 + 0.25, px1 - 0.25, fy, fy + 0.02, pz0 + 0.25, pz1 - 0.25, { tile: 1 });
+    R(M.stone, px0, px1, fy, fy + ph, pz0, pz0 + 0.25);
+    R(M.stone, px0, px1, fy, fy + ph, pz1 - 0.25, pz1);
+    R(M.stone, px0, px0 + 0.25, fy, fy + ph, pz0 + 0.25, pz1 - 0.25);
+    R(M.stone, px1 - 0.25, px1, fy, fy + ph, pz0 + 0.25, pz1 - 0.25);
+    RB(M.creamMarble, px0 - 0.05, px1 + 0.05, fy + ph, fy + ph + 0.05, pz0 - 0.05, pz0 + 0.3, 0.01);
+    RB(M.creamMarble, px0 - 0.05, px1 + 0.05, fy + ph, fy + ph + 0.05, pz1 - 0.3, pz1 + 0.05, 0.01);
+    RB(M.creamMarble, px0 - 0.05, px0 + 0.3, fy + ph, fy + ph + 0.05, pz0 + 0.3, pz1 - 0.3, 0.01);
+    RB(M.creamMarble, px1 - 0.3, px1 + 0.05, fy + ph, fy + ph + 0.05, pz0 + 0.3, pz1 - 0.3, 0.01);
+    const spaWater = R(M.water, px0 + 0.25, px1 - 0.25, fy + ph - 0.1, fy + ph - 0.07, pz0 + 0.25, pz1 - 0.25);
+    animated.push((t) => (spaWater.position.y = fy + ph - 0.085 + Math.sin(t * 1.4) * 0.003));
+    R(M.led, px0, px1, fy + 0.02, fy + 0.05, pz1, pz1 + 0.02);
+    R(M.led, px0 - 0.02, px0, fy + 0.02, fy + 0.05, pz0, pz1);
+    for (let i = 0; i < 6; i++) candle(px0 + 0.4 + i * 0.85, fy + ph + 0.05, pz1 - 0.15, rr(0.08, 0.16));
+    // wall spout into the pool
+    tube(M.brass, [[px1 - 0.1, fy + 1.4, -8.75], [px1 - 0.4, fy + 1.45, -8.75], [px1 - 0.55, fy + 1.3, -8.75]], 0.03, root, 12, 8);
+    // sculptural pendant cluster over the pool
+    for (let i = 0; i < 7; i++) {
+      const x = 12.6 + i * 0.63, z = -8.75 + (i % 2 ? 0.35 : -0.35), y = 5.4 + (i % 3) * 0.35;
+      R(M.black, x - 0.004, x + 0.004, y, 7.18, z - 0.004, z + 0.004);
+      const gl = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.36, 24, 1, true), M.pendantGlass);
+      gl.position.set(x, y - 0.18, z);
+      root.add(gl);
+      cyl(M.bulb, 0.01, 0.01, 0.2, x, y - 0.3, z, 6);
+    }
+    // cedar sauna with glass front
+    const sx0 = 17.4, sx1 = 19.95, sz0 = -5.8, sz1 = -2.2, sh = fy + 2.6;
+    R(M.teak, sx0, sx1, fy, sh, sz0, sz0 + 0.08, { tile: 1.4 });
+    R(M.teak, sx0, sx1, fy, sh, sz1 - 0.08, sz1, { tile: 1.4 });
+    R(M.teak, sx1 - 0.08, sx1, fy, sh, sz0, sz1, { tile: 1.4 });
+    R(M.teak, sx0, sx1, sh, sh + 0.08, sz0, sz1, { tile: 1.4 });
+    glazing("x", sx0, sz0 + 0.08, sz1 - 0.08, fy, sh, 2, []);
+    for (const [bx0, by] of [[18.9, fy + 0.9], [18.2, fy + 0.45]]) {
+      R(M.teak, bx0, sx1 - 0.08, by - 0.05, by, sz0 + 0.08, sz1 - 0.08, { tile: 1.4 });
+      R(M.led, bx0 - 0.01, bx0, by - 0.1, by - 0.08, sz0 + 0.1, sz1 - 0.1);
+    }
+    R(M.black, 17.6, 18.0, fy, fy + 0.6, sz0 + 0.15, sz0 + 0.55);
+    for (let i = 0; i < 10; i++) {
+      const st = new THREE.Mesh(new THREE.IcosahedronGeometry(0.06, 0), M.stonePot);
+      st.position.set(17.8 + rr(-0.12, 0.12), fy + 0.64, sz0 + 0.35 + rr(-0.12, 0.12));
+      root.add(st);
+    }
+    // loungers facing the sea
+    for (const x of [9.2, 10.9]) {
+      const g = grp(x, fy, -12.4, 0);
+      R(M.walnutH, -0.4, 0.4, 0.1, 0.28, -1.0, 1.0, { parent: g });
+      RB(M.linen, -0.38, 0.38, 0.28, 0.4, -0.3, 0.98, 0.06, g);
+      const b = RB(M.linen, -0.38, 0.38, 0.28, 0.4, -1.0, -0.3, 0.06, g);
+      b.rotation.x = -0.6;
+      b.position.set(0, 0.62, -0.72);
+      const towel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.6, 16), M.linen);
+      towel.rotation.z = Math.PI / 2;
+      towel.position.set(0, 0.48, 0.7);
+      g.add(towel);
+    }
+    lathe(M.emperador, [[0, 0], [0.22, 0], [0.22, 0.45], [0, 0.45]], 10.05, fy, -11.6, 32);
+    candle(10.05, fy + 0.45, -11.6, 0.14);
+    // towel bench by the sauna, plants
+    R(M.teak, 15.4, 17.0, fy, fy + 0.45, -3.2, -2.6);
+    for (let i = 0; i < 3; i++) {
+      RB(M.linen, 15.6 + i * 0.5, 16.0 + i * 0.5, fy + 0.45, fy + 0.55, -3.1, -2.7, 0.03);
+      RB(M.linen, 15.6 + i * 0.5, 16.0 + i * 0.5, fy + 0.55, fy + 0.65, -3.1, -2.7, 0.03);
+    }
+    pot(19.0, fy, -12.9, 0.5, 0.85);
+    olive(19.0, fy + 0.8, -12.9, 0.75);
+    pot(8.6, fy, -2.0, 0.4, 0.7, M.ceramic);
+    leafCluster(8.6, fy + 1.3, -2.0, 0.5, 160, 0x607552, 0.07);
+    // stone relief panel on the inner wall
+    R(M.art, 7.8, 7.84, fy + 0.6, fy + 2.6, -12.2, -9.8);
+    R(M.led, 7.8, 7.86, fy + 2.75, fy + 2.77, -12.2, -9.8);
+  }
+
   /* ---------- Lights ---------- */
   const L = {
     hall: pointLight(0xffc98a, 40, 16, 0, 5.5, -3),
@@ -1299,6 +1597,12 @@ export function buildVilla(scene, { env, lite = false, sunDir }) {
     stairs: pointLight(0xffc98a, 12, 8, 0, 0.2, 6),
     pool: pointLight(0x5fe0ff, 30, 14, -2, -0.9, -22.5),
     lounge: pointLight(0xff9a50, 14, 8, 15, 1.0, -16.8),
+    wine: pointLight(0xffb870, 10, 6, -5.9, 2.2, -9.7),
+    stair: pointLight(0xffc98a, 14, 8, -5.6, 3.2, -2.5),
+    library: pointLight(0xffc88a, 24, 12, -13.5, 6.4, -7.5),
+    spa: pointLight(0xffc27a, 24, 12, 13.5, 6.4, -7.5),
+    spaPool: pointLight(0x5fe0ff, 16, 7, 14.5, 4.2, -8.5),
+    sauna: pointLight(0xffa860, 8, 5, 18.8, 5.6, -4.3),
   };
 
   // Shadows from the sun on all opaque geometry
