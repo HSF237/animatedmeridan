@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Process — Meridian Arch Studio</title>
+  <meta name="description" content="How Meridian Arch Studio takes a building from survey to handover." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 28 16 4l12 24' fill='none' stroke='%23ff8a3d' stroke-width='3'/%3E%3C/svg%3E" />
+</head>
+<body class="theme-site">
+  <div class="loader" id="loader">
+    <div class="loader__inner">
+      <svg class="loader__mark" viewBox="0 0 120 120" aria-hidden="true">
+        <path d="M10 110 L60 10 L110 110" />
+        <path d="M32 110 L60 54 L88 110" />
+        <line x1="4" y1="110" x2="116" y2="110" />
+      </svg>
+      <div class="loader__count"><span id="loaderCount">0</span>%</div>
+      <div class="loader__label">Meridian Arch Studio</div>
+    </div>
+  </div>
+
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <a href="index.html" class="nav__logo" data-hover>
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 28 16 4l12 24M10 28l6-12 6 12" /></svg>
+      <span>Meridian<em>Arch Studio</em></span>
+    </a>
+    <nav class="nav__links" id="navLinks">
+      <a href="index.html" data-hover>Home</a>
+      <a href="studio.html" data-hover>Studio</a>
+      <a href="projects.html" data-hover>Projects</a>
+      <a href="services.html" data-hover>Services</a>
+      <a href="process.html" aria-current="page" data-hover>Process</a>
+      <a href="contact.html" class="nav__cta" data-hover>Start a project</a>
+    </nav>
+    <button class="nav__burger" id="burger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span></button>
+  </header>
+
+  <div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar"></div></div>
+  <div class="room" aria-live="polite">
+    <span class="room__num" id="roomNum">01</span>
+    <span class="room__line"></span>
+    <span class="room__name" id="roomName">Survey</span>
+  </div>
+
+  <main id="top">
+    <section class="hero section" data-scene="0">
+      <div class="hero__content">
+        <p class="eyebrow reveal">Process</p>
+        <h1 class="hero__title"><span class="line"><span class="word">From</span></span><span class="line"><span class="word"><em>first survey</em></span></span><span class="line"><span class="word">to first light.</span></span></h1>
+        <p class="hero__sub reveal">Every building follows the same five moves. Scroll through the time-lapse and watch a house come alive on its site.</p>
+        <div class="hero__actions reveal"><a href="#step1" class="btn btn--solid magnetic" data-hover><span>Begin the time-lapse</span></a><a href="contact.html" class="btn btn--ghost magnetic" data-hover><span>Start a project</span></a></div>
+      </div>
+      <div class="hero__meta reveal">
+        <div><strong>5 stages</strong><span>From survey to handover</span></div>
+        <div class="scroll-hint"><span>Scroll</span><i></i></div>
+      </div>
+    </section>
+    <section class="section process-step" id="step1" data-scene="1">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">01 — Site & brief</p><h2 class="title reveal">Listen</h2></div>
+        <div class="panel glass reveal"><p>We walk the land, study the sun, wind and views, and listen until we understand how you want to live.</p><p class="panel__meta">Weeks 1–4</p></div>
+      </div>
+    </section>
+    <section class="section process-step" id="step2" data-scene="2">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">02 — Massing options</p><h2 class="title reveal">Imagine</h2></div>
+        <div class="panel glass reveal"><p>Rapid sketches and physical models explore several forms, each tested against light and budget.</p><p class="panel__meta">Weeks 4–10</p></div>
+      </div>
+    </section>
+    <section class="section process-step" id="step3" data-scene="3">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">03 — Design & light</p><h2 class="title reveal">Refine</h2></div>
+        <div class="panel glass reveal"><p>We settle the design and rehearse it: sun studies, immersive walkthroughs and material mock-ups.</p><p class="panel__meta">Weeks 10–24</p></div>
+      </div>
+    </section>
+    <section class="section process-step" id="step4" data-scene="4">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">04 — On site</p><h2 class="title reveal">Build</h2></div>
+        <div class="panel glass reveal"><p>We stay on site through construction, protecting every detail from the drawing to the handover.</p><p class="panel__meta">Months 6–24</p></div>
+      </div>
+    </section>
+    <section class="section process-step" id="step5" data-scene="5">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">05 — First light</p><h2 class="title reveal">Handover</h2></div>
+        <div class="panel glass reveal"><p>Landscape, lighting and the last furniture arrive. We stay a year to tune the building with you.</p><p class="panel__meta">Completion</p></div>
+      </div>
+    </section>
+    <section class="section nextpage" data-scene="6">
+      <div class="container">
+        <a href="contact.html" class="nextlink reveal" data-hover>
+          <span class="nextlink__k">Next</span>
+          <span class="nextlink__t">Start your project</span>
+          <span class="nextlink__a" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__big">Meridian<em>Arch Studio</em></span>
+      <div class="footer__links footer__pages"><a href="index.html" data-hover>Home</a><a href="studio.html" data-hover>Studio</a><a href="projects.html" data-hover>Projects</a><a href="services.html" data-hover>Services</a><a href="process.html" data-hover>Process</a><a href="contact.html" data-hover>Contact</a></div>
+      <div class="footer__links">
+        <a href="#" data-hover>Instagram</a><a href="#" data-hover>LinkedIn</a><a href="#" data-hover>Behance</a>
+      </div>
+      <span class="footer__copy">© <span id="year"></span> Meridian Arch Studio. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }
+  </script>
+  <script type="module" src="process.js?v=10"></script>
+</body>
+</html>

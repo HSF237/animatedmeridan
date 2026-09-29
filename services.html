@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Services — Meridian Arch Studio</title>
+  <meta name="description" content="Architecture, interior design, urban planning, computational design and sustainability." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 28 16 4l12 24' fill='none' stroke='%23c2603a' stroke-width='3'/%3E%3C/svg%3E" />
+</head>
+<body class="theme-clay">
+  <div class="loader" id="loader">
+    <div class="loader__inner">
+      <svg class="loader__mark" viewBox="0 0 120 120" aria-hidden="true">
+        <path d="M10 110 L60 10 L110 110" />
+        <path d="M32 110 L60 54 L88 110" />
+        <line x1="4" y1="110" x2="116" y2="110" />
+      </svg>
+      <div class="loader__count"><span id="loaderCount">0</span>%</div>
+      <div class="loader__label">Meridian Arch Studio</div>
+    </div>
+  </div>
+
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <a href="index.html" class="nav__logo" data-hover>
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 28 16 4l12 24M10 28l6-12 6 12" /></svg>
+      <span>Meridian<em>Arch Studio</em></span>
+    </a>
+    <nav class="nav__links" id="navLinks">
+      <a href="index.html" data-hover>Home</a>
+      <a href="studio.html" data-hover>Studio</a>
+      <a href="projects.html" data-hover>Projects</a>
+      <a href="services.html" aria-current="page" data-hover>Services</a>
+      <a href="process.html" data-hover>Process</a>
+      <a href="contact.html" class="nav__cta" data-hover>Start a project</a>
+    </nav>
+    <button class="nav__burger" id="burger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span></button>
+  </header>
+
+  <div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar"></div></div>
+  <div class="room" aria-live="polite">
+    <span class="room__num" id="roomNum">01</span>
+    <span class="room__line"></span>
+    <span class="room__name" id="roomName">Assembled</span>
+  </div>
+
+  <main id="top">
+    <section class="hero section" data-scene="0">
+      <div class="hero__content">
+        <p class="eyebrow reveal">Services</p>
+        <h1 class="hero__title"><span class="line"><span class="word">One practice.</span></span><span class="line"><span class="word"><em>Every layer</em></span></span><span class="line"><span class="word">of a building.</span></span></h1>
+        <p class="hero__sub reveal">A building is made of layers: site, structure, envelope, interiors and systems. We design them together. Scroll to pull the model apart.</p>
+        <div class="hero__actions reveal"><a href="#s1" class="btn btn--solid magnetic" data-hover><span>Explore the layers</span></a><a href="contact.html" class="btn btn--ghost magnetic" data-hover><span>Start a project</span></a></div>
+      </div>
+      <div class="hero__meta reveal">
+        <div><strong>5 disciplines</strong><span>One integrated team</span></div>
+        <div class="scroll-hint"><span>Scroll</span><i></i></div>
+      </div>
+    </section>
+    <section class="section service-step" id="s1" data-scene="1">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">01 — Structure & form</p><h2 class="title reveal">Architecture</h2></div>
+        <div class="panel glass reveal"><p>From first concept to construction drawings, we design buildings that are simple in form and generous in light.</p><ul class="ticks"><li>Concept & schematic design</li><li>Detailed design & documentation</li><li>Construction administration</li></ul></div>
+      </div>
+    </section>
+    <section class="section service-step" id="s2" data-scene="2">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">02 — Rooms & materials</p><h2 class="title reveal">Interior Design</h2></div>
+        <div class="panel glass reveal"><p>Spaces, furniture and material palettes composed as one continuous experience, down to the last lamp.</p><ul class="ticks"><li>Space planning</li><li>Bespoke furniture & joinery</li><li>Lighting, art & styling</li></ul></div>
+      </div>
+    </section>
+    <section class="section service-step" id="s3" data-scene="3">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">03 — Sites & context</p><h2 class="title reveal">Urban Planning</h2></div>
+        <div class="panel glass reveal"><p>Masterplans and public realm strategies that knit buildings back into the city around them.</p><ul class="ticks"><li>Masterplans & feasibility</li><li>Public realm & landscape</li><li>Planning approvals</li></ul></div>
+      </div>
+    </section>
+    <section class="section service-step" id="s4" data-scene="4">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">04 — Parametric façades</p><h2 class="title reveal">Computational Design</h2></div>
+        <div class="panel glass reveal"><p>Parametric modelling and daylight simulation give every façade its rhythm and every room its light.</p><ul class="ticks"><li>Parametric façade design</li><li>Daylight & energy simulation</li><li>Digital twins for handover</li></ul></div>
+      </div>
+    </section>
+    <section class="section service-step" id="s5" data-scene="5">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">05 — Energy & systems</p><h2 class="title reveal">Sustainability</h2></div>
+        <div class="panel glass reveal"><p>Net-zero strategies, mass timber and passive systems embedded from the very first sketch.</p><ul class="ticks"><li>Passive design & orientation</li><li>Solar, heat pumps & storage</li><li>Lifecycle & material studies</li></ul></div>
+      </div>
+    </section>
+    <section class="section nextpage" data-scene="6">
+      <div class="container">
+        <a href="process.html" class="nextlink reveal" data-hover>
+          <span class="nextlink__k">Next</span>
+          <span class="nextlink__t">How we work</span>
+          <span class="nextlink__a" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__big">Meridian<em>Arch Studio</em></span>
+      <div class="footer__links footer__pages"><a href="index.html" data-hover>Home</a><a href="studio.html" data-hover>Studio</a><a href="projects.html" data-hover>Projects</a><a href="services.html" data-hover>Services</a><a href="process.html" data-hover>Process</a><a href="contact.html" data-hover>Contact</a></div>
+      <div class="footer__links">
+        <a href="#" data-hover>Instagram</a><a href="#" data-hover>LinkedIn</a><a href="#" data-hover>Behance</a>
+      </div>
+      <span class="footer__copy">© <span id="year"></span> Meridian Arch Studio. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }
+  </script>
+  <script type="module" src="services.js?v=10"></script>
+</body>
+</html>

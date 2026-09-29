@@ -2,27 +2,30 @@
 
 A single-page website for **Meridian Arch Studio** with a real-time 3D scene built in Three.js.
 
-## Features
-- **A real, fully modelled 3D villa**, based on the reference renders in `reference/`: split-face limestone cladding, bronze-framed double-height glazing, flat roofs with walnut soffits and downlights, and cantilevered upper terraces with glass balustrades.
-- **One continuous camera path, driven by scrolling.** No cuts, shake or transition effects:
-  1. **Arrival:** a cobblestone driveway, lit stone planters, olive and cypress trees, and lit entrance steps. The glass doors open as you approach.
-  2. **Entrance hall:** a crystal chandelier and a double-height view to the sea.
-  3. **Grand living:** a cream sectional with pillows and a knit throw, an Emperador marble coffee table with candles, round bouclé chairs, a split-stone wall with the TV, a linear fireplace and lit shelving, olive trees in stone pots, and sheer curtains.
-  4. **Kitchen and dining:** walnut millwork, ovens and a wine fridge, a waterfall quartzite island with a bronze faucet, bouclé stools, glass pendants, and a walnut dining table with a crystal linear pendant.
-  5. **Glass wine vault:** a glass room between the kitchen and living, with a backlit, double-sided bronze rack of bottles.
-  6. **Sculptural spiral stair:** one turn of floating walnut treads around a polished brass core, with a brass handrail and lit treads, climbing past the chandelier.
-  7. **Gallery:** a mezzanine with relief art, a bronze sculpture and a bouclé bench.
-  8. **Library:** floor-to-ceiling walnut shelving with lit shelves and a rolling brass ladder, facing sofas, glass pendants and a writing desk at the sea glass.
-  9. **Glass bridge:** across the double-height hall, beside the crystal chandelier, to the private wing.
-  10. **Spa:** a raised plunge pool in stone and marble with candles and pendants, a cedar sauna with a glass front, and loungers facing the sea.
-  11. **Spa terrace and infinity pool:** out onto the balcony, then down to the pool deck with its waterfall edges, daybeds, lanterns and fire lounge.
-  12. **Master suite:** in through the open slider. A stone feature wall with backlit relief art, a channel-tufted bed with layered bedding and a knit throw, a bench and a shag rug, ending on the view back out to the sunset.
-- **Golden-hour setting:** a sky with drifting clouds and the sun, a sea with a sun glitter path, coastal hills, soft sun shadows and a light glow on the lamps
-- Labels drawn onto points in the 3D model, and a room label in the bottom-left
-- Loader, reveal animations, a custom cursor, magnetic buttons, 3D tilt project cards and blueprint drawings that draw themselves
-- Responsive layout; respects `prefers-reduced-motion`
+## Pages
+Each page has its own theme and its own 3D scene, all driven by scrolling.
 
-To change the camera route, edit `K` in `main.js`. The model is in `villa.js`.
+| Page | Theme | 3D scene |
+| --- | --- | --- |
+| `index.html` | Gold & dark | **Villa tour.** A continuous walk through a full 3D luxury villa, inside and out (see below). |
+| `studio.html` | Blueprint blue | **Drafting table.** The villa draws itself as line-work on a drafting sheet, a scan plane makes it solid, dimension lines appear, then a sun path arcs overhead. |
+| `projects.html` | Dark showroom | **Rotating gallery.** Six architectural models on lit pedestals that assemble part by part; scrolling turns the ring and spotlights each project. |
+| `services.html` | Light clay model | **Exploded layers.** A clay model of the villa separates into layers (site, interior, structure, envelope, systems), and each service lights up its layer. Fins ripple for Computational Design, solar panels track the sun for Sustainability. |
+| `process.html` | Construction orange | **Site time-lapse.** A drone surveys terrain with contour lines, massing options appear, a sun study runs, then a crane and scaffolding build the house, ending at night with the lights on. |
+| `contact.html` | Night globe | **Dotted Earth.** Three glowing studio beacons with flight arcs. The camera flies to each office, and sending an enquiry launches a light pulse to New York. |
+
+## Home page: the villa tour
+- **A real, fully modelled 3D villa**, based on the reference renders in `reference/`: split-face limestone, bronze-framed double-height glazing, flat roofs with walnut soffits and downlights, and cantilevered upper terraces.
+- **One continuous camera path, driven by scrolling.** No cuts, shake or transition effects: arrival and driveway → entrance hall → grand living → kitchen and dining → glass wine vault → spiral stair → gallery → library → glass bridge → spa → infinity pool → master suite.
+- **Golden-hour setting:** sky with drifting clouds and sun, sea with a glitter path, coastal hills, soft sun shadows and a light glow on the lamps
+- Labels drawn onto points in the 3D model, and a room label in the bottom-left
+
+## Shared features
+- Page transitions with a curtain wipe, a loader, reveal animations, a custom cursor, magnetic buttons, 3D tilt cards and counters
+- Responsive layout (on phones the 3D scene sits above the text); respects `prefers-reduced-motion`
+- Add `?snap` to any page URL to disable scroll smoothing, which is useful for automated screenshots
+
+To change the villa's camera route, edit `K` in `home.js`. The villa model is in `villa.js`.
 
 ## Run locally
 No build step. Serve the folder with any static server (ES modules need http, not `file://`):
@@ -35,8 +38,11 @@ python3 -m http.server 8000
 Three.js and the add-ons it uses are vendored in `vendor/`, so the site runs without a CDN. Fonts load from Google Fonts, with fallbacks if they're unavailable.
 
 ## Files
-- `index.html` — page structure and content
-- `styles.css` — design system, layout and CSS motion
-- `villa.js` — the 3D villa: textures, materials, architecture, furniture, landscape, lights
-- `reference/` — the reference renders the model is based on
-- `main.js` — renderer, sky, sea, camera path, labels and UI interactions
+- `index.html`, `studio.html`, `projects.html`, `services.html`, `process.html`, `contact.html`: the pages
+- `styles.css`: the design system, per-page themes (`theme-*` classes) and layout
+- `ui.js`: interface behaviour shared by every page (loader, reveals, cursor, transitions, menu, form)
+- `kit.js`: shared 3D helpers (renderer, bloom, scroll mapping, labels, dust)
+- `home.js` and `villa.js`: the villa scene and model
+- `studio.js`, `projects.js`, `services.js`, `process.js`, `contact.js`: one scene per page
+- `reference/`: the reference renders the villa is based on
+- `vendor/`: Three.js and the add-ons it uses

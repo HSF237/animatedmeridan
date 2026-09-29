@@ -12,8 +12,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const smooth = (t) => t * t * (3 - 2 * t);
 
-document.body.classList.add("loading");
-document.getElementById("year").textContent = new Date().getFullYear();
+import { initUI } from "./ui.js";
 
 /* =========================================================
    RENDERER — golden hour on the coast
@@ -268,11 +267,10 @@ const annoEls = ANNOS.map((a, i) => {
 
 /* ---------- Render loop ---------- */
 let started = false;
+initUI({ onStart: () => (started = true), loaderMs: 1800 });
 let tSmooth = 0;
 let scrollP = 0;
 let lastRoom = "";
-const uniqueSrcs = ["villa"];
-let loadedCount = 1;
 const roomName = document.getElementById("roomName");
 const roomNum = document.getElementById("roomNum");
 const roomList = [...new Set(K.map((k) => k.room))];
@@ -335,138 +333,3 @@ onResize();
 tSmooth = sceneTime();
 tick();
 
-/* =========================================================
-   LOADER
-   ========================================================= */
-const loader = document.getElementById("loader");
-const loaderCount = document.getElementById("loaderCount");
-let loadVal = 0;
-const loadStart = performance.now();
-function loadStep() {
-  const el = performance.now() - loadStart;
-  const texP = loadedCount / uniqueSrcs.length;
-  loadVal = Math.min(100, Math.floor(Math.min(smooth(clamp01(el / 1800)), texP) * 100));
-  loaderCount.textContent = loadVal;
-  if (loadVal < 100) return requestAnimationFrame(loadStep);
-  setTimeout(() => {
-    loader.classList.add("done");
-    document.body.classList.remove("loading");
-    document.body.classList.add("ready");
-    started = true;
-  }, 250);
-}
-requestAnimationFrame(loadStep);
-
-/* =========================================================
-   UI MOTION
-   ========================================================= */
-// Reveal on scroll
-const io = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((e) => {
-      if (!e.isIntersecting) return;
-      e.target.classList.add("in");
-      io.unobserve(e.target);
-      e.target.querySelectorAll?.("[data-count]").forEach(countUp);
-    });
-  },
-  { threshold: 0.18, rootMargin: "0px 0px -5% 0px" }
-);
-document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
-
-function countUp(el) {
-  const end = +el.dataset.count;
-  const start = performance.now();
-  const dur = 2000;
-  (function step(now) {
-    const k = clamp01((now - start) / dur);
-    el.textContent = Math.round(end * (1 - Math.pow(1 - k, 4)));
-    if (k < 1) requestAnimationFrame(step);
-  })(start);
-}
-
-// Scroll-linked UI: progress bar, nav, timeline
-const nav = document.getElementById("nav");
-const progressBar = document.getElementById("progressBar");
-const timelineFill = document.getElementById("timelineFill");
-const timeline = document.querySelector(".timeline");
-function onScroll() {
-  const max = document.documentElement.scrollHeight - window.innerHeight;
-  scrollP = max > 0 ? window.scrollY / max : 0;
-  progressBar.style.transform = `scaleX(${scrollP})`;
-  nav.classList.toggle("scrolled", window.scrollY > 40);
-  const r = timeline.getBoundingClientRect();
-  const k = clamp01((window.innerHeight * 0.8 - r.top) / (r.height + window.innerHeight * 0.3));
-  timelineFill.style.transform = window.innerWidth > 960 ? `scaleY(${k})` : `scaleX(${k})`;
-}
-window.addEventListener("scroll", onScroll, { passive: true });
-onScroll();
-
-// Custom cursor
-const cursor = document.getElementById("cursor");
-const dot = document.getElementById("cursorDot");
-const cur = { x: innerWidth / 2, y: innerHeight / 2, cx: innerWidth / 2, cy: innerHeight / 2 };
-window.addEventListener("pointermove", (e) => {
-  cur.x = e.clientX;
-  cur.y = e.clientY;
-  dot.style.transform = `translate(${cur.x}px, ${cur.y}px)`;
-});
-(function cursorLoop() {
-  cur.cx = lerp(cur.cx, cur.x, 0.16);
-  cur.cy = lerp(cur.cy, cur.y, 0.16);
-  cursor.style.transform = `translate(${cur.cx}px, ${cur.cy}px)`;
-  requestAnimationFrame(cursorLoop);
-})();
-document.querySelectorAll("[data-hover], a, button, input, textarea, select").forEach((el) => {
-  el.addEventListener("pointerenter", () => cursor.classList.add("hover"));
-  el.addEventListener("pointerleave", () => cursor.classList.remove("hover"));
-});
-
-// 3D tilt cards
-if (!reducedMotion) {
-  document.querySelectorAll(".tilt").forEach((card) => {
-    card.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse") return;
-      const r = card.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width - 0.5;
-      const py = (e.clientY - r.top) / r.height - 0.5;
-      card.style.transform = `rotateY(${px * 12}deg) rotateX(${-py * 12}deg) translateZ(10px)`;
-    });
-    card.addEventListener("pointerleave", () => (card.style.transform = ""));
-  });
-
-  // Magnetic buttons
-  document.querySelectorAll(".magnetic").forEach((btn) => {
-    btn.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse") return;
-      const r = btn.getBoundingClientRect();
-      const x = e.clientX - r.left - r.width / 2;
-      const y = e.clientY - r.top - r.height / 2;
-      btn.style.transform = `translate(${x * 0.25}px, ${y * 0.35}px)`;
-    });
-    btn.addEventListener("pointerleave", () => (btn.style.transform = ""));
-  });
-}
-
-// Mobile menu
-const burger = document.getElementById("burger");
-const navLinks = document.getElementById("navLinks");
-burger.addEventListener("click", () => {
-  const open = navLinks.classList.toggle("open");
-  burger.setAttribute("aria-expanded", open);
-});
-navLinks.querySelectorAll("a").forEach((a) =>
-  a.addEventListener("click", () => {
-    navLinks.classList.remove("open");
-    burger.setAttribute("aria-expanded", "false");
-  })
-);
-
-// Contact form (front-end only)
-document.getElementById("contactForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const note = document.getElementById("formNote");
-  const name = new FormData(e.target).get("name");
-  note.textContent = `Thank you, ${name}. Our studio will be in touch within two working days.`;
-  e.target.reset();
-});

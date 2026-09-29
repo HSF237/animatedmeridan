@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — Meridian Arch Studio</title>
+  <meta name="description" content="Contact Meridian Arch Studio in New York, Lisbon or Singapore." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 28 16 4l12 24' fill='none' stroke='%23f0c27a' stroke-width='3'/%3E%3C/svg%3E" />
+</head>
+<body class="theme-globe">
+  <div class="loader" id="loader">
+    <div class="loader__inner">
+      <svg class="loader__mark" viewBox="0 0 120 120" aria-hidden="true">
+        <path d="M10 110 L60 10 L110 110" />
+        <path d="M32 110 L60 54 L88 110" />
+        <line x1="4" y1="110" x2="116" y2="110" />
+      </svg>
+      <div class="loader__count"><span id="loaderCount">0</span>%</div>
+      <div class="loader__label">Meridian Arch Studio</div>
+    </div>
+  </div>
+
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <a href="index.html" class="nav__logo" data-hover>
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 28 16 4l12 24M10 28l6-12 6 12" /></svg>
+      <span>Meridian<em>Arch Studio</em></span>
+    </a>
+    <nav class="nav__links" id="navLinks">
+      <a href="index.html" data-hover>Home</a>
+      <a href="studio.html" data-hover>Studio</a>
+      <a href="projects.html" data-hover>Projects</a>
+      <a href="services.html" data-hover>Services</a>
+      <a href="process.html" data-hover>Process</a>
+      <a href="contact.html" class="nav__cta" aria-current="page" data-hover>Start a project</a>
+    </nav>
+    <button class="nav__burger" id="burger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span></button>
+  </header>
+
+  <div class="progress" aria-hidden="true"><div class="progress__bar" id="progressBar"></div></div>
+  <div class="room" aria-live="polite">
+    <span class="room__num" id="roomNum">01</span>
+    <span class="room__line"></span>
+    <span class="room__name" id="roomName">Worldwide</span>
+  </div>
+
+  <main id="top">
+    <section class="hero section" data-scene="0">
+      <div class="hero__content">
+        <p class="eyebrow reveal">Contact</p>
+        <h1 class="hero__title"><span class="line"><span class="word">Let's build</span></span><span class="line"><span class="word"><em>something</em></span></span><span class="line"><span class="word">timeless.</span></span></h1>
+        <p class="hero__sub reveal">Three studios, one team. Tell us about the site, the scale and the dream, and we will reply within two working days.</p>
+        <div class="hero__actions reveal"><a href="#enquiry" class="btn btn--solid magnetic" data-hover><span>Send an enquiry</span></a><a href="mailto:hello@meridianarch.studio" class="btn btn--ghost magnetic" data-hover><span>hello@meridianarch.studio</span></a></div>
+      </div>
+      <div class="hero__meta reveal">
+        <div><strong>New York · Lisbon · Singapore</strong><span>Studios worldwide</span></div>
+        <div class="scroll-hint"><span>Scroll</span><i></i></div>
+      </div>
+    </section>
+    <section class="section office-step" data-scene="1">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">Studio 01</p><h2 class="title reveal">New York</h2></div>
+        <div class="panel glass reveal"><p>214 Hudson Street, New York, NY</p><p><a href="tel:+1(212)5550148" data-hover>+1 (212) 555 0148</a></p><p class="panel__meta">Mon–Fri · 9:00–18:00</p></div>
+      </div>
+    </section>
+    <section class="section office-step" data-scene="2">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">Studio 02</p><h2 class="title reveal">Lisbon</h2></div>
+        <div class="panel glass reveal"><p>Rua do Alecrim 27, Lisboa</p><p><a href="tel:+351215550192" data-hover>+351 21 555 0192</a></p><p class="panel__meta">Mon–Fri · 9:00–18:00</p></div>
+      </div>
+    </section>
+    <section class="section office-step" data-scene="3">
+      <div class="container">
+        <div class="section-head"><p class="eyebrow reveal">Studio 03</p><h2 class="title reveal">Singapore</h2></div>
+        <div class="panel glass reveal"><p>18 Robertson Quay, Singapore</p><p><a href="tel:+6565550134" data-hover>+65 6555 0134</a></p><p class="panel__meta">Mon–Fri · 9:00–18:00</p></div>
+      </div>
+    </section>
+    <section class="section contact" id="enquiry" data-scene="4">
+      <div class="container split">
+        <div class="split__left">
+          <p class="eyebrow reveal">Enquiry</p>
+          <h2 class="title reveal">Tell us about <em>your site.</em></h2>
+          <div class="contact__info reveal">
+            <a href="mailto:hello@meridianarch.studio" data-hover>hello@meridianarch.studio</a>
+            <span>We reply within two working days.</span>
+          </div>
+        </div>
+        <form class="split__right glass contact__form reveal" id="contactForm">
+          <label><span>Name</span><input type="text" name="name" required placeholder="Your full name" /></label>
+          <label><span>Email</span><input type="email" name="email" required placeholder="you@company.com" /></label>
+          <label><span>Project type</span>
+            <select name="type">
+              <option>Residential</option>
+              <option>Commercial / Mixed-use</option>
+              <option>Cultural / Civic</option>
+              <option>Interiors</option>
+              <option>Urban planning</option>
+            </select>
+          </label>
+          <label><span>Tell us about it</span><textarea name="message" rows="4" placeholder="Site, scale, timeline, dreams…"></textarea></label>
+          <button type="submit" class="btn btn--solid magnetic" data-hover><span>Send enquiry</span></button>
+          <p class="form__note" id="formNote" role="status"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__big">Meridian<em>Arch Studio</em></span>
+      <div class="footer__links footer__pages"><a href="index.html" data-hover>Home</a><a href="studio.html" data-hover>Studio</a><a href="projects.html" data-hover>Projects</a><a href="services.html" data-hover>Services</a><a href="process.html" data-hover>Process</a><a href="contact.html" data-hover>Contact</a></div>
+      <div class="footer__links">
+        <a href="#" data-hover>Instagram</a><a href="#" data-hover>LinkedIn</a><a href="#" data-hover>Behance</a>
+      </div>
+      <span class="footer__copy">© <span id="year"></span> Meridian Arch Studio. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }
+  </script>
+  <script type="module" src="contact.js?v=10"></script>
+</body>
+</html>

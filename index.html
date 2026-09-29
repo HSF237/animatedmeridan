@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="stylesheet" href="styles.css?v=10" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 28 16 4l12 24' fill='none' stroke='%23d9a45b' stroke-width='3'/%3E%3C/svg%3E" />
 </head>
 <body>
@@ -36,17 +36,17 @@
 
   <!-- Nav -->
   <header class="nav" id="nav">
-    <a href="#top" class="nav__logo" data-hover>
+    <a href="index.html" class="nav__logo" data-hover>
       <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 28 16 4l12 24M10 28l6-12 6 12" /></svg>
       <span>Meridian<em>Arch Studio</em></span>
     </a>
     <nav class="nav__links" id="navLinks">
-      <a href="#studio" data-hover>Studio</a>
-      <a href="#projects" data-hover>Projects</a>
-      <a href="#services" data-hover>Services</a>
-      <a href="#process" data-hover>Process</a>
-      <a href="#residence" data-hover>Residence</a>
-      <a href="#contact" class="nav__cta" data-hover>Start a project</a>
+      <a href="index.html" aria-current="page" data-hover>Home</a>
+      <a href="studio.html" data-hover>Studio</a>
+      <a href="projects.html" data-hover>Projects</a>
+      <a href="services.html" data-hover>Services</a>
+      <a href="process.html" data-hover>Process</a>
+      <a href="contact.html" class="nav__cta" data-hover>Start a project</a>
     </nav>
     <button class="nav__burger" id="burger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span></button>
   </header>
@@ -96,6 +96,7 @@
         <div class="split__left">
           <p class="eyebrow reveal">01 — The Studio</p>
           <h2 class="title reveal">A practice built on the <em>meridian</em> — the line where the sun stands highest.</h2>
+          <a href="studio.html" class="more reveal" data-hover>Meet the studio <span>→</span></a>
         </div>
         <div class="split__right glass reveal">
           <p>For over fifteen years we have designed towers, homes, cultural spaces and public landscapes across three continents. Every project begins with a single question: <strong>how will light move through this place?</strong></p>
@@ -116,6 +117,7 @@
         <div class="section-head">
           <p class="eyebrow reveal">02 — Selected Work</p>
           <h2 class="title reveal">Projects that <em>shape</em> skylines.</h2>
+          <a href="projects.html" class="more reveal" data-hover>See all projects <span>→</span></a>
         </div>
         <div class="project-grid">
           <article class="card tilt reveal" data-hover>
@@ -188,6 +190,7 @@
         <div class="section-head">
           <p class="eyebrow reveal">03 — Services</p>
           <h2 class="title reveal">From first sketch to <em>final stone.</em></h2>
+          <a href="services.html" class="more reveal" data-hover>All services <span>→</span></a>
         </div>
         <div class="service-list">
           <div class="service reveal" data-hover>
@@ -230,6 +233,7 @@
         <div class="section-head">
           <p class="eyebrow reveal">04 — Process</p>
           <h2 class="title reveal">How a building <em>comes alive.</em></h2>
+          <a href="process.html" class="more reveal" data-hover>Watch the time-lapse <span>→</span></a>
         </div>
         <div class="timeline">
           <div class="timeline__line"><i id="timelineFill"></i></div>
@@ -291,6 +295,7 @@
         <div class="split__left">
           <p class="eyebrow reveal">06 — Contact</p>
           <h2 class="title title--xl reveal">Let's build <em>something</em> timeless.</h2>
+          <a href="contact.html" class="more reveal" data-hover>Our studios worldwide <span>→</span></a>
           <div class="contact__info reveal">
             <a href="mailto:hello@meridianarch.studio" data-hover>hello@meridianarch.studio</a>
             <span>+1 (212) 555 0148</span>
@@ -320,6 +325,7 @@
   <footer class="footer">
     <div class="container footer__inner">
       <span class="footer__big">Meridian<em>Arch Studio</em></span>
+      <div class="footer__links footer__pages"><a href="index.html" data-hover>Home</a><a href="studio.html" data-hover>Studio</a><a href="projects.html" data-hover>Projects</a><a href="services.html" data-hover>Services</a><a href="process.html" data-hover>Process</a><a href="contact.html" data-hover>Contact</a></div>
       <div class="footer__links">
         <a href="#" data-hover>Instagram</a><a href="#" data-hover>LinkedIn</a><a href="#" data-hover>Behance</a>
       </div>
@@ -330,6 +336,6 @@
   <script type="importmap">
     { "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }
   </script>
-  <script type="module" src="main.js?v=8"></script>
+  <script type="module" src="home.js?v=10"></script>
 </body>
 </html>
